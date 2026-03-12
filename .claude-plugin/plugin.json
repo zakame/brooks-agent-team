@@ -1,0 +1,13 @@
+{
+  "name": "brooks-agent-team",
+  "description": "Surgical team collaboration skills for Claude Code, inspired by Fred Brooks' Mythical Man-Month",
+  "version": "1.0.0",
+  "author": {
+    "name": "Zak Elep",
+    "email": "zakame@zakame.net"
+  },
+  "homepage": "https://github.com/zakame/brooks-agent-team",
+  "repository": "https://github.com/zakame/brooks-agent-team",
+  "license": "MIT",
+  "keywords": ["skills", "surgical-team", "brooks", "collaboration", "code-review", "testing"]
+}
