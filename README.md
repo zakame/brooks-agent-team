@@ -59,15 +59,48 @@ claude --plugin-dir ~/.claude/plugins/brooks-agent-team
 
 ## Usage
 
-### Assemble the team
+### Two ways to start
 
-Run the `/assemble-team` command at the start of any development session to get a project-contextual briefing on which roles apply and how to invoke them:
+| Command | When to use |
+|---------|-------------|
+| `/assemble-team` | Single-session work — one Claude instance plays all roles sequentially |
+| `/assemble-with-agent-teams` | Parallel work — spawns one independent Claude session per role |
+
+### `/assemble-team` — single-session briefing
+
+Run at the start of any development session to get a project-contextual briefing on which roles apply and how to invoke them:
 
 ```
 /assemble-team
 ```
 
-Claude will survey your project and present a tailored overview of the team, with specific suggestions for each role based on what it finds.
+Claude surveys your project and presents a tailored overview of the team. Roles are invoked on demand as the work requires them. Lightweight and works without any additional setup.
+
+### `/assemble-with-agent-teams` — parallel team spawn
+
+Requires [Claude Code Agent Teams](https://code.claude.com/docs/en/agent-teams.md) (experimental). Enable it first:
+
+```json
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  }
+}
+```
+
+Then run:
+
+```
+/assemble-with-agent-teams
+```
+
+Claude checks prerequisites, asks which roles to spawn, and generates the Agent Teams spawn prompt with role-specific startup instructions for each teammate. Each teammate automatically invokes their assigned `brooks-agent-team:` skill at session start and before every task they claim.
+
+**What you get:**
+- One independent Claude session per role (Copilot, Tester, and any others you choose)
+- True parallelism — Copilot reviews while you continue coding
+- Shared task list with dependency tracking and role-tagged tasks (`[implement]`, `[review]`, `[test]`, etc.)
+- File ownership assignments to prevent conflicts
 
 ### Invoke skills directly
 

@@ -89,3 +89,6 @@ End with:
 > Which role would you like to activate first, or shall we proceed directly to the work?
 >
 > If you have a task in mind, describe it and I'll identify which team members should be involved.
+>
+> **Want real parallel teammates?** Run `/assemble-with-agent-teams` to spawn independent
+> sessions per role using Claude Code Agent Teams.
