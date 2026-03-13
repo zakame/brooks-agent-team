@@ -1,6 +1,6 @@
 ---
 name: surgeon
-description: Use when beginning any implementation task — guides the chief programmer role: staying focused, making decisive architectural choices, and knowing when to summon supporting roles
+description: "Use when beginning any implementation task — guides the chief programmer role: staying focused, making decisive architectural choices, and knowing when to summon supporting roles"
 ---
 
 # The Surgeon: Chief Programmer
