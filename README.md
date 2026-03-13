@@ -1,8 +1,8 @@
 # brooks-agent-team
 
-A Claude Code skills plugin that organizes AI-assisted software development around Fred Brooks' **Surgical Team** model from *The Mythical Man-Month* (1975).
+A skills plugin that organizes AI-assisted software development around Fred Brooks' **Surgical Team** model from *The Mythical Man-Month* (1975). Compatible with **GitHub Copilot CLI** and **Claude Code**.
 
-Instead of every team member working on all parts of a system, the Surgical Team concentrates critical work in one skilled "surgeon" (chief programmer), supported by specialized roles that keep the surgeon focused and productive. This plugin maps those roles to Claude Code skills and agent dispatch templates.
+Instead of every team member working on all parts of a system, the Surgical Team concentrates critical work in one skilled "surgeon" (chief programmer), supported by specialized roles that keep the surgeon focused and productive. This plugin maps those roles to agent skills and dispatch templates.
 
 ## Inspiration
 
@@ -11,6 +11,8 @@ This project draws from two sources:
 **Fred Brooks' Surgical Team** (Chapter 3, *The Mythical Man-Month*, 1975), originally conceived by Harlan Mills: a small, highly specialized team organized around a single chief programmer who writes all critical code, supported by a copilot, tester, toolsmith, editor, administrator, language lawyer, and program clerk — each with a distinct, non-overlapping responsibility.
 
 **[Superpowers by Jesse Vincent](https://github.com/obra/superpowers)**: a Claude Code skills framework that demonstrated how composable, role-aware skills can guide an AI agent through disciplined software development workflows. The structure, conventions, and plugin format of this project follow Superpowers' design closely.
+
+The `SKILL.md` format used here conforms to the [Agent Skills open standard](https://github.com/agentskills/agentskills), which is supported by both GitHub Copilot CLI and Claude Code.
 
 ## The Team
 
@@ -29,7 +31,42 @@ This project draws from two sources:
 
 ## Installation
 
-### For a single session
+### GitHub Copilot CLI
+
+Clone this repository to a stable location:
+
+```bash
+git clone https://github.com/zakame/brooks-agent-team ~/.copilot/plugins/brooks-agent-team
+```
+
+Register the skills directory in a Copilot CLI session:
+
+```
+/skills add ~/.copilot/plugins/brooks-agent-team/skills
+```
+
+This makes all team skills available. To persist across sessions, add the directory permanently using `/skills add`. Skills are immediately usable — Copilot will invoke them automatically based on context, or you can name them explicitly in your prompt:
+
+```
+Use the surgeon skill to start implementing this feature.
+Use the copilot skill to review my changes.
+```
+
+The `copilot` and `tester` **custom agents** are available in `.github/agents/` and can be copied to `~/.copilot/agents/` for use across all projects:
+
+```bash
+cp ~/.copilot/plugins/brooks-agent-team/.github/agents/*.agent.md ~/.copilot/agents/
+```
+
+Then invoke them via `/agent` or directly in a prompt:
+
+```
+Use the copilot agent to review the authentication changes.
+```
+
+### Claude Code
+
+#### For a single session
 
 Start Claude Code with the `--plugin-dir` flag pointing to this repository:
 
@@ -43,7 +80,7 @@ Skills are immediately available. To reload after making changes without restart
 /reload-plugins
 ```
 
-### Persistent use
+#### Persistent use
 
 Clone this repository to a stable location and add the `--plugin-dir` flag to your shell alias or Claude Code configuration:
 
@@ -61,25 +98,41 @@ claude --plugin-dir ~/.claude/plugins/brooks-agent-team
 
 ### Two ways to start
 
-| Command | When to use |
-|---------|-------------|
-| `/assemble-team` | Single-session work — one Claude instance plays all roles sequentially |
-| `/assemble-with-agent-teams` | Parallel work — spawns one independent Claude session per role |
+| Skill / Command | Tool | When to use |
+|---------|------|-------------|
+| `assemble-team` skill | Copilot CLI & Claude Code | Single-session work — one AI instance plays all roles sequentially |
+| `/assemble-team` command | Claude Code only | Same as above, as a slash command |
+| `assemble-with-fleet` skill | Copilot CLI | Parallel work — spawns one independent session per role via `/fleet` |
+| `/assemble-with-agent-teams` command | Claude Code only | Parallel work — spawns via Claude Code Agent Teams |
 
-### `/assemble-team` — single-session briefing
+### `assemble-team` — single-session briefing
 
-Run at the start of any development session to get a project-contextual briefing on which roles apply and how to invoke them:
+Run at the start of any development session to get a project-contextual briefing on which roles apply and how to invoke them.
 
+**Copilot CLI:**
+```
+Use the assemble-team skill
+```
+
+**Claude Code:**
 ```
 /assemble-team
 ```
 
-Claude surveys your project and presents a tailored overview of the team. Roles are invoked on demand as the work requires them. Lightweight and works without any additional setup.
+The AI surveys your project and presents a tailored overview of the team. Roles are invoked on demand as the work requires them. Lightweight and works without any additional setup.
 
-### `/assemble-with-agent-teams` — parallel team spawn
+### Parallel team spawn
 
-Requires [Claude Code Agent Teams](https://code.claude.com/docs/en/agent-teams.md) (experimental). Enable it first:
+Spawn one independent AI session per role so that Copilot reviews and Tester writes tests while you continue on the critical path.
 
+**Copilot CLI** — uses `assemble-with-fleet` skill (requires experimental fleet mode):
+```
+Use the assemble-with-fleet skill
+```
+
+**Claude Code** — uses `/assemble-with-agent-teams` (requires [Claude Code Agent Teams](https://code.claude.com/docs/en/agent-teams.md)):
+
+Enable Agent Teams first:
 ```json
 {
   "env": {
@@ -87,25 +140,27 @@ Requires [Claude Code Agent Teams](https://code.claude.com/docs/en/agent-teams.m
   }
 }
 ```
-
 Then run:
-
 ```
 /assemble-with-agent-teams
 ```
 
-Claude checks prerequisites, asks which roles to spawn, and generates the Agent Teams spawn prompt with role-specific startup instructions for each teammate. Each teammate automatically invokes their assigned `brooks-agent-team:` skill at session start and before every task they claim.
-
 **What you get:**
-- One independent Claude session per role (Copilot, Tester, and any others you choose)
+- One independent session per role (Copilot, Tester, and any others you choose)
 - True parallelism — Copilot reviews while you continue coding
 - Shared task list with dependency tracking and role-tagged tasks (`[implement]`, `[review]`, `[test]`, etc.)
 - File ownership assignments to prevent conflicts
 
 ### Invoke skills directly
 
-Skills are namespaced under `brooks-agent-team:`. Invoke any role skill by name:
+**Copilot CLI** — use the skill name in your prompt:
+```
+Use the surgeon skill to start implementing this feature.
+Use the copilot skill to review my changes.
+Use the language-lawyer skill for this edge case.
+```
 
+**Claude Code** — skills are namespaced under `brooks-agent-team:`:
 ```
 brooks-agent-team:surgeon
 brooks-agent-team:copilot
@@ -119,7 +174,7 @@ brooks-agent-team:program-clerk
 
 ### Automatic invocation
 
-Once the plugin is loaded, Claude reads each skill's `description` field and automatically invokes the relevant skill when your request matches its trigger conditions. For example:
+The AI reads each skill's `description` field and automatically invokes the relevant skill when your request matches its trigger conditions. For example:
 
 - Starting an implementation task → `surgeon` skill loads
 - Completing a feature → `copilot` skill is suggested
@@ -130,13 +185,23 @@ Once the plugin is loaded, Claude reads each skill's `description` field and aut
 
 The **Copilot** and **Tester** roles can be dispatched as independent subagents, allowing the Surgeon to continue working on the critical path while review or test writing happens in parallel.
 
-When the Copilot or Tester skill is invoked, it will prompt you to either work inline or dispatch a subagent using the templates in `agents/copilot.md` and `agents/tester.md`.
+**Copilot CLI** — use the custom agents in `.github/agents/` (copy to `~/.copilot/agents/` for cross-project use):
+```
+Use the copilot agent to review the authentication changes.
+Use the tester agent to write tests for the payment module.
+```
+
+**Claude Code** — use the dispatch templates in `agents/copilot.md` and `agents/tester.md`.
 
 ## Project Structure
 
 ```
 .claude-plugin/
-  plugin.json               Plugin manifest
+  plugin.json               Claude Code plugin manifest
+.github/
+  agents/
+    copilot.agent.md        Copilot CLI custom agent: code reviewer
+    tester.agent.md         Copilot CLI custom agent: adversarial tester
 skills/
   using-brooks-team/        Meta-skill: team orientation and role routing
   surgeon/                  Chief programmer operating guide
@@ -147,11 +212,14 @@ skills/
   toolsmith/                Custom tool builder
   language-lawyer/          Language and framework edge cases
   program-clerk/            Code organization and structure
+  assemble-team/            Copilot CLI: team briefing skill
+  assemble-with-fleet/      Copilot CLI: parallel team spawn via fleet mode
 agents/
-  copilot.md                Dispatch template for Copilot subagent
-  tester.md                 Dispatch template for Tester subagent
+  copilot.md                Claude Code dispatch template for Copilot subagent
+  tester.md                 Claude Code dispatch template for Tester subagent
 commands/
-  assemble-team.md          /assemble-team slash command
+  assemble-team.md          Claude Code: /assemble-team slash command
+  assemble-with-agent-teams.md  Claude Code: /assemble-with-agent-teams slash command
 ```
 
 ## Philosophy
