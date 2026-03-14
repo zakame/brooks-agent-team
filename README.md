@@ -1,6 +1,6 @@
 # brooks-agent-team
 
-A skills plugin that organizes AI-assisted software development around Fred Brooks' **Surgical Team** model from *The Mythical Man-Month* (1975). Compatible with **GitHub Copilot CLI** and **Claude Code**.
+A skills plugin that organizes AI-assisted software development around Fred Brooks' **Surgical Team** model from *The Mythical Man-Month* (1975). Compatible with **GitHub Copilot CLI**, **Claude Code**, and **OpenCode**.
 
 Instead of every team member working on all parts of a system, the Surgical Team concentrates critical work in one skilled "surgeon" (chief programmer), supported by specialized roles that keep the surgeon focused and productive. This plugin maps those roles to agent skills and dispatch templates.
 
@@ -12,7 +12,7 @@ This project draws from two sources:
 
 **[Superpowers by Jesse Vincent](https://github.com/obra/superpowers)**: a Claude Code skills framework that demonstrated how composable, role-aware skills can guide an AI agent through disciplined software development workflows. The structure, conventions, and plugin format of this project follow Superpowers' design closely.
 
-The `SKILL.md` format used here conforms to the [Agent Skills open standard](https://github.com/agentskills/agentskills), which is supported by both GitHub Copilot CLI and Claude Code.
+The `SKILL.md` format used here conforms to the [Agent Skills open standard](https://github.com/agentskills/agentskills), which is supported by GitHub Copilot CLI, Claude Code, and OpenCode.
 
 ## The Team
 
@@ -64,6 +64,29 @@ Then invoke them via `/agent` or directly in a prompt:
 Use the copilot agent to review the authentication changes.
 ```
 
+### OpenCode
+
+Clone this repository to a stable location:
+
+```bash
+git clone https://github.com/zakame/brooks-agent-team ~/.opencode/plugins/brooks-agent-team
+```
+
+OpenCode auto-discovers agent definitions from `.opencode/agents/` in your project directory. To make the Copilot and Tester subagents available in a project:
+
+```bash
+cp ~/.opencode/plugins/brooks-agent-team/.opencode/agents/*.md .opencode/agents/
+```
+
+For cross-project use, consult the [OpenCode agent documentation](https://opencode.ai/docs) for global agent configuration paths.
+
+Skills are available via the [Agent Skills open standard](https://github.com/agentskills/agentskills). OpenCode auto-discovers `SKILL.md` files from registered plugin directories — consult the [OpenCode documentation](https://opencode.ai/docs) for how to configure a skills directory. Once available, skills can be invoked directly in a session:
+
+```
+Use the surgeon skill to start implementing this feature.
+Use the copilot skill to review my changes.
+```
+
 ### Claude Code
 
 #### For a single session
@@ -100,7 +123,7 @@ claude --plugin-dir ~/.claude/plugins/brooks-agent-team
 
 | Skill / Command | Tool | When to use |
 |---------|------|-------------|
-| `assemble-team` skill | Copilot CLI & Claude Code | Single-session work — one AI instance plays all roles sequentially |
+| `assemble-team` skill | Copilot CLI, Claude Code & OpenCode | Single-session work — one AI instance plays all roles sequentially |
 | `/assemble-team` command | Claude Code only | Same as above, as a slash command |
 | `assemble-with-fleet` skill | Copilot CLI | Parallel work — spawns one independent session per role via `/fleet` |
 | `/assemble-with-agent-teams` command | Claude Code only | Parallel work — spawns via Claude Code Agent Teams |
@@ -117,6 +140,11 @@ Use the assemble-team skill
 **Claude Code:**
 ```
 /assemble-team
+```
+
+**OpenCode:**
+```
+Use the assemble-team skill
 ```
 
 The AI surveys your project and presents a tailored overview of the team. Roles are invoked on demand as the work requires them. Lightweight and works without any additional setup.
@@ -172,6 +200,13 @@ brooks-agent-team:language-lawyer
 brooks-agent-team:program-clerk
 ```
 
+**OpenCode** — use the skill name directly in a session prompt:
+```
+Use the surgeon skill to start implementing this feature.
+Use the copilot skill to review my changes.
+Use the language-lawyer skill for this edge case.
+```
+
 ### Automatic invocation
 
 The AI reads each skill's `description` field and automatically invokes the relevant skill when your request matches its trigger conditions. For example:
@@ -193,34 +228,73 @@ Use the tester agent to write tests for the payment module.
 
 **Claude Code** — use the dispatch templates in `agents/copilot.md` and `agents/tester.md`.
 
-## Project Structure
+**OpenCode** — use the agent definitions in `.opencode/agents/`:
+```
+Dispatch the Copilot agent to review the authentication changes.
+Dispatch the Tester agent to write tests for the payment module.
+```
+
+The Copilot agent is read-only (permissions deny `edit`, `bash`, and `webfetch`); the Tester agent can write files and run shell commands (permissions allow `edit` and `bash`).
+
+## Repository Structure
 
 ```
-.claude-plugin/
-  plugin.json               Claude Code plugin manifest
-.github/
-  agents/
-    copilot.agent.md        Copilot CLI custom agent: code reviewer
-    tester.agent.md         Copilot CLI custom agent: adversarial tester
-skills/
-  using-brooks-team/        Meta-skill: team orientation and role routing
-  surgeon/                  Chief programmer operating guide
-  copilot/                  Code review and backup
-  tester/                   Adversarial test strategy
-  administrator/            Task tracking and scope defense
-  editor/                   Documentation and accuracy
-  toolsmith/                Custom tool builder
-  language-lawyer/          Language and framework edge cases
-  program-clerk/            Code organization and structure
-  assemble-team/            Copilot CLI: team briefing skill
-  assemble-with-fleet/      Copilot CLI: parallel team spawn via fleet mode
-agents/
-  copilot.md                Claude Code dispatch template for Copilot subagent
-  tester.md                 Claude Code dispatch template for Tester subagent
-commands/
-  assemble-team.md          Claude Code: /assemble-team slash command
-  assemble-with-agent-teams.md  Claude Code: /assemble-with-agent-teams slash command
+skills/                         Shared across all platforms (Agent Skills standard)
+  using-brooks-team/SKILL.md      Meta-skill: team orientation and role routing
+  surgeon/SKILL.md                Chief programmer operating guide
+  copilot/SKILL.md                Code review and backup
+  tester/SKILL.md                 Adversarial test strategy
+  administrator/SKILL.md          Task tracking and scope defense
+  editor/SKILL.md                 Documentation and accuracy
+  toolsmith/SKILL.md              Custom tool builder
+  language-lawyer/SKILL.md        Language and framework edge cases
+  program-clerk/SKILL.md          Code organization and structure
+  assemble-team/SKILL.md          Team briefing skill (Copilot CLI version)
+  assemble-with-fleet/SKILL.md    Parallel team spawn via fleet mode (Copilot CLI)
+
+.claude-plugin/                 Claude Code specific
+  plugin.json                     Plugin manifest (name, version, author)
+agents/                         Claude Code dispatch templates
+  copilot.md                      Subagent template for Copilot role
+  tester.md                       Subagent template for Tester role
+commands/                       Claude Code slash commands
+  assemble-team.md                /assemble-team command
+  assemble-with-agent-teams.md    /assemble-with-agent-teams command
+
+.github/agents/                 GitHub Copilot CLI custom agents
+  copilot.agent.md                Code reviewer agent
+  tester.agent.md                 Adversarial tester agent
+
+.opencode/agents/               OpenCode custom agents
+  copilot.md                      Code reviewer agent
+  tester.md                       Adversarial tester agent
 ```
+
+### What lives where
+
+The `skills/` directory is the core of the plugin. Each subdirectory contains a `SKILL.md` file conforming to the [Agent Skills open standard](https://github.com/agentskills/agentskills), which is supported by GitHub Copilot CLI, Claude Code, and OpenCode. These files work on any platform that reads the standard.
+
+Platform-specific files provide deeper integration:
+
+| Directory | Platform | Purpose |
+|-----------|----------|---------|
+| `.claude-plugin/` | Claude Code | Plugin manifest for `--plugin-dir` loading |
+| `agents/` | Claude Code | Dispatch templates for subagent roles (Copilot, Tester) |
+| `commands/` | Claude Code | Slash commands (`/assemble-team`, `/assemble-with-agent-teams`) |
+| `.github/agents/` | Copilot CLI | Custom agent definitions for `/agent` dispatch |
+| `.opencode/agents/` | OpenCode | Custom agent definitions for subagent dispatch |
+| `skills/assemble-team/` | Copilot CLI | Team briefing skill (Copilot CLI variant) |
+| `skills/assemble-with-fleet/` | Copilot CLI | Parallel spawn via fleet mode |
+
+### OpenCode compatibility
+
+The eight role skills in `skills/` are compatible with [OpenCode](https://opencode.ai) via the [Agent Skills open standard](https://github.com/agentskills/agentskills) — OpenCode reads `SKILL.md` files the same way Claude Code and Copilot CLI do.
+
+Full agent dispatch is supported through `.opencode/agents/`, which includes Copilot and Tester subagent definitions. These files use OpenCode's agent frontmatter format (`description`, `mode: subagent`, `permission` block). The permissions match each role's responsibilities: the Copilot denies edits and shell/web fetches, while the Tester allows edits and shell commands. File reads are allowed by default in OpenCode — set `permission.read: deny` in agent frontmatter to restrict them. See the [OpenCode agent specification](https://opencode.ai/docs) for the full permission model.
+
+If OpenCode updates its agent frontmatter format, check the [OpenCode agent specification](https://opencode.ai/docs) to verify these files remain current.
+
+> **Note for maintainers:** The agent body content is duplicated across three locations: `.opencode/agents/`, `agents/` (Claude Code), and `.github/agents/` (Copilot CLI). Any change to the review or test protocol must be applied in all three.
 
 ## Philosophy
 
