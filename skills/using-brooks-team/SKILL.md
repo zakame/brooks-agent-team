@@ -4,8 +4,9 @@ description: Use at the start of any substantial development session to orient t
 ---
 
 <SUBAGENT-STOP>
-If you were dispatched as a Copilot, Tester, Editor, or Toolsmith subagent,
+If you were dispatched as a Copilot, Tester, Editor, Toolsmith, Language Lawyer, or Program Clerk subagent,
 skip this skill. Your role instructions are in your agent prompt.
+(Administrator is intentionally omitted — it has no dispatch template and is inline-only.)
 </SUBAGENT-STOP>
 
 # Using the Brooks Surgical Team
