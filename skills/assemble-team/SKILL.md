@@ -1,6 +1,6 @@
 ---
 name: assemble-team
-description: "Copilot CLI only — Use at the start of any development session to introduce the Brooks Surgical Team members, survey the current project, and present a contextual briefing on which roles are most relevant and how to invoke each one"
+description: "Copilot CLI or OpenCode — Use at the start of any development session to introduce the Brooks Surgical Team members, survey the current project, and present a contextual briefing on which roles are most relevant and how to invoke each one"
 ---
 
 # Assemble the Surgical Team
@@ -92,4 +92,4 @@ End with:
 > If you have a task in mind, describe it and I'll identify which team members should be involved.
 >
 > **Want real parallel teammates?** Use the `assemble-with-fleet` skill to spawn independent
-> sessions per role using Copilot CLI's fleet mode.
+> sessions per role using Copilot CLI's fleet mode or OpenCode's task tool.
