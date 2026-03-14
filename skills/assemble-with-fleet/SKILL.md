@@ -1,6 +1,6 @@
 ---
 name: assemble-with-fleet
-description: "Copilot CLI only — Use to directly spawn a Brooks Surgical Team using parallel subagents — one independent agent per role, working in parallel with a shared task list. Skips orientation and goes straight to spawning."
+description: "Copilot CLI fleet mode or OpenCode task tool — Spawn a Brooks Surgical Team using parallel subagents — one independent agent per role, working in parallel with a shared task list. Skips orientation and goes straight to spawning."
 ---
 
 # Assemble Team with Fleet Mode
@@ -35,8 +35,9 @@ Wait for the user's response before continuing.
 
 ## Step 3: Build the Shared Task List
 
-Using the project survey from Step 1, construct an initial task list using the session
-SQL database. Insert tasks with appropriate tags:
+Using the project survey from Step 1, construct an initial task list.
+
+**Copilot CLI:** use the session SQL database. Insert tasks with appropriate tags:
 - `[implement]` — Surgeon claims these
 - `[review]` — Copilot claims these (depend on corresponding `[implement]` tasks)
 - `[test]` — Tester claims these (depend on corresponding `[implement]` tasks)
@@ -48,11 +49,20 @@ SQL database. Insert tasks with appropriate tags:
 Add dependency links so `[review]` and `[test]` tasks are blocked until their
 corresponding `[implement]` task is complete.
 
+**OpenCode:** do NOT rely on the session SQL database. Maintain the shared task list
+in the main thread and include the current task list (with dependencies) in each
+subagent prompt so they can claim work without database access.
+
 ## Step 4: Spawn the Team
 
-Using the roles confirmed in Step 2, spawn each teammate directly via the `task` tool
-with `mode: "background"`. Do NOT ask the user to copy-paste anything or run `/fleet`
-manually — spawn the agents yourself.
+Using the roles confirmed in Step 2, spawn each teammate directly via the `task` tool.
+
+**Copilot CLI:** use `mode: "background"` and any fleet-specific fields required.
+**OpenCode:** do not use `mode`. Always include `subagent_type`. If resuming an
+existing background agent, include both `task_id` and `subagent_type` together.
+
+Do NOT ask the user to copy-paste anything or run `/fleet` manually — spawn the agents
+yourself.
 
 **File ownership to include in each agent's prompt (assign based on your project survey):**
 - Copilot: read-only review access across all files; never edits source directly
@@ -64,7 +74,10 @@ manually — spawn the agents yourself.
 
 ### Copilot (always spawn)
 
-Use `agent_type: "copilot"` (this is a configured custom agent). Prompt:
+Copilot CLI: use `agent_type: "copilot"` (this is a configured custom agent).
+OpenCode: use `subagent_type: "copilot"`.
+
+Prompt:
 
 > You are the Copilot on the surgical team for [PROJECT NAME].
 > Claim tasks tagged `[review]` from the shared task list in the session SQL database.
@@ -74,7 +87,10 @@ Use `agent_type: "copilot"` (this is a configured custom agent). Prompt:
 
 ### Tester (always spawn)
 
-Use `agent_type: "tester"` (this is a configured custom agent). Prompt:
+Copilot CLI: use `agent_type: "tester"` (this is a configured custom agent).
+OpenCode: use `subagent_type: "tester"`.
+
+Prompt:
 
 > You are the Tester on the surgical team for [PROJECT NAME].
 > Claim tasks tagged `[test]` from the shared task list in the session SQL database.
@@ -83,7 +99,8 @@ Use `agent_type: "tester"` (this is a configured custom agent). Prompt:
 
 ### Optional roles (spawn only if user requested them)
 
-Use `agent_type: "general-purpose"` for all optional roles.
+Copilot CLI: use `agent_type: "general-purpose"` for all optional roles.
+OpenCode: use `subagent_type: "general"` for all optional roles.
 
 **Editor** prompt:
 > You are the Editor on the surgical team for [PROJECT NAME]. Invoke the `editor` skill
