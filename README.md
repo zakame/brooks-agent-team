@@ -125,7 +125,7 @@ claude --plugin-dir ~/.claude/plugins/brooks-agent-team
 |---------|------|-------------|
 | `assemble-team` skill | Copilot CLI, Claude Code & OpenCode | Single-session work — one AI instance plays all roles sequentially |
 | `/assemble-team` command | Claude Code only | Same as above, as a slash command |
-| `assemble-with-fleet` skill | Copilot CLI | Parallel work — spawns one independent session per role via `/fleet` |
+| `assemble-with-fleet` skill | Copilot CLI & OpenCode | Parallel work — spawns one independent session per role (Copilot CLI uses `/fleet`; OpenCode uses the task tool) |
 | `/assemble-with-agent-teams` command | Claude Code only | Parallel work — spawns via Claude Code Agent Teams |
 
 ### `assemble-team` — single-session briefing
@@ -154,6 +154,11 @@ The AI surveys your project and presents a tailored overview of the team. Roles 
 Spawn one independent AI session per role so that Copilot reviews and Tester writes tests while you continue on the critical path.
 
 **Copilot CLI** — uses `assemble-with-fleet` skill (requires experimental fleet mode):
+```
+Use the assemble-with-fleet skill
+```
+
+**OpenCode** — uses `assemble-with-fleet` skill (spawns subagents via the task tool):
 ```
 Use the assemble-with-fleet skill
 ```
@@ -249,8 +254,8 @@ skills/                         Shared across all platforms (Agent Skills standa
   toolsmith/SKILL.md              Custom tool builder
   language-lawyer/SKILL.md        Language and framework edge cases
   program-clerk/SKILL.md          Code organization and structure
-  assemble-team/SKILL.md          Team briefing skill (Copilot CLI version)
-  assemble-with-fleet/SKILL.md    Parallel team spawn via fleet mode (Copilot CLI)
+  assemble-team/SKILL.md          Team briefing skill (Copilot CLI and OpenCode)
+  assemble-with-fleet/SKILL.md    Parallel team spawn via Copilot CLI fleet mode or OpenCode task tool
 
 .claude-plugin/                 Claude Code specific
   plugin.json                     Plugin manifest (name, version, author)
@@ -283,8 +288,8 @@ Platform-specific files provide deeper integration:
 | `commands/` | Claude Code | Slash commands (`/assemble-team`, `/assemble-with-agent-teams`) |
 | `.github/agents/` | Copilot CLI | Custom agent definitions for `/agent` dispatch |
 | `.opencode/agents/` | OpenCode | Custom agent definitions for subagent dispatch |
-| `skills/assemble-team/` | Copilot CLI | Team briefing skill (Copilot CLI variant) |
-| `skills/assemble-with-fleet/` | Copilot CLI | Parallel spawn via fleet mode |
+| `skills/assemble-team/` | Copilot CLI & OpenCode | Team briefing skill |
+| `skills/assemble-with-fleet/` | Copilot CLI & OpenCode | Parallel spawn via fleet mode or task tool |
 
 ### OpenCode compatibility
 
