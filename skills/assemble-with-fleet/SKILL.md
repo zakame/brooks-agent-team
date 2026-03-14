@@ -5,6 +5,10 @@ description: "Copilot CLI fleet mode or OpenCode task tool — Spawn a Brooks Su
 
 # Assemble Team with Fleet Mode
 
+<SUBAGENT-STOP>
+You are already operating as a dispatched subagent. Do not invoke `assemble-with-fleet`, `using-brooks-team`, or `surgeon` skills. Invoking `assemble-with-fleet` from inside a subagent would spawn additional subagents recursively.
+</SUBAGENT-STOP>
+
 When invoked, do the following steps in order.
 
 ## Step 1: Quick Project Survey
@@ -80,7 +84,7 @@ OpenCode: use `subagent_type: "copilot"`.
 Prompt:
 
 > You are the Copilot on the surgical team for [PROJECT NAME].
-> Claim tasks tagged `[review]` from the shared task list in the session SQL database.
+> Claim tasks tagged `[review]` from the shared task list (Copilot CLI: session SQL database; OpenCode: main-thread task list in this chat).
 > Ask the Surgeon for spec or plan context before reviewing anything.
 > Do not edit source code — report findings only.
 > File ownership: read-only access across all files.
@@ -93,7 +97,7 @@ OpenCode: use `subagent_type: "tester"`.
 Prompt:
 
 > You are the Tester on the surgical team for [PROJECT NAME].
-> Claim tasks tagged `[test]` from the shared task list in the session SQL database.
+> Claim tasks tagged `[test]` from the shared task list (Copilot CLI: session SQL database; OpenCode: main-thread task list in this chat).
 > Enumerate failure modes before writing any test code. Do not modify production code.
 > File ownership: owns `tests/` and any `*.test.*` / `*.spec.*` files.
 
@@ -105,28 +109,28 @@ OpenCode: use `subagent_type: "general"` for all optional roles.
 **Editor** prompt:
 > You are the Editor on the surgical team for [PROJECT NAME]. Invoke the `editor` skill
 > at the start of this session and before every task you claim.
-> Claim tasks tagged `[docs]` from the shared task list in the session SQL database.
+> Claim tasks tagged `[docs]` from the shared task list (Copilot CLI: session SQL database; OpenCode: main-thread task list in this chat).
 > Read the code before writing about it. Never document what you haven't verified.
 > File ownership: owns `docs/`, `README.md`, and any `*.md` documentation files.
 
 **Toolsmith** prompt:
 > You are the Toolsmith on the surgical team for [PROJECT NAME]. Invoke the `toolsmith`
 > skill at the start of this session and before every task you claim.
-> Claim tasks tagged `[tooling]` from the shared task list in the session SQL database.
+> Claim tasks tagged `[tooling]` from the shared task list (Copilot CLI: session SQL database; OpenCode: main-thread task list in this chat).
 > Every tool you build must have --help text and tests.
 > File ownership: owns `scripts/`, `Makefile`, and any tooling/config files.
 
 **Language Lawyer** prompt:
 > You are the Language Lawyer on the surgical team for [PROJECT NAME]. Invoke the
 > `language-lawyer` skill at the start of this session and before every task you claim.
-> Claim tasks tagged `[research]` from the shared task list in the session SQL database.
+> Claim tasks tagged `[research]` from the shared task list (Copilot CLI: session SQL database; OpenCode: main-thread task list in this chat).
 > Cite the spec or docs — never guess. Say "I don't know" when uncertain.
 > File ownership: read-only research; communicate findings, do not edit files.
 
 **Program Clerk** prompt:
 > You are the Program Clerk on the surgical team for [PROJECT NAME]. Invoke the
 > `program-clerk` skill at the start of this session and before every task you claim.
-> Claim tasks tagged `[structure]` from the shared task list in the session SQL database.
+> Claim tasks tagged `[structure]` from the shared task list (Copilot CLI: session SQL database; OpenCode: main-thread task list in this chat).
 > Propose all reorganizations to the Surgeon for approval before executing.
 > File ownership: proposes structure changes; executes only after Surgeon approval.
 
@@ -142,5 +146,5 @@ After spawning, tell the user:
 > A few reminders:
 > - Two teammates must not edit the same file — follow the ownership assignments above
 > - Run the `assemble-team` skill at any time for a full role reference
-> - Use `/tasks` to monitor background teammates
+> - Copilot CLI: use `/tasks` to monitor background teammates; OpenCode: use ctrl-x + down
 > - When the work is done, cancel any idle background tasks and clean up team resources
