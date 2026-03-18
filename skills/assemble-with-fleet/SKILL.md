@@ -103,8 +103,9 @@ Prompt:
 
 ### Optional roles (spawn only if user requested them)
 
-Copilot CLI: use `agent_type: "general-purpose"` for all optional roles.
-OpenCode: use `subagent_type: "general"` for all optional roles.
+**Language Lawyer** (Copilot CLI: use `agent_type: "language-lawyer"`; OpenCode: use `subagent_type: "language-lawyer"`)
+
+**Editor**, **Toolsmith**, **Program Clerk** (Copilot CLI: use `agent_type: "general-purpose"`; OpenCode: use `subagent_type: "general"`)
 
 **Editor** prompt:
 > You are the Editor on the surgical team for [PROJECT NAME]. Invoke the `editor` skill
