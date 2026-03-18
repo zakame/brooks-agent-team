@@ -77,7 +77,7 @@ You own all critical design and implementation decisions. The team supports you.
 ---
 
 **Language Lawyer** — Language and framework expertise
-- Invoke: `language-lawyer` skill
+- Invoke: `language-lawyer` skill (inline), or dispatch the `language-lawyer` custom agent (subagent investigation)
 - Best for: [describe language/framework in use and any version-sensitive areas]
 - Trigger: Edge cases; version differences; subtle API behavior; security-sensitive operations
 
