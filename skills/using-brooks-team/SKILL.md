@@ -35,8 +35,9 @@ Dispatch subagent for:             Inline guidance for:
 ──────────────────────             ────────────────────
 Code review (Copilot)              Planning (Administrator)
 Test writing (Tester)              File organization (Program Clerk)
-Large tool builds (Toolsmith)      Language questions (Language Lawyer)
-Doc writing passes (Editor)        Small tool scripts (Toolsmith)
+Language investigations (Lawyer)   Small tool scripts (Toolsmith)
+Large tool builds (Toolsmith)
+Doc writing passes (Editor)
 ```
 
 ## Skill Priority
