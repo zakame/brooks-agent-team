@@ -52,7 +52,7 @@ Use the surgeon skill to start implementing this feature.
 Use the copilot skill to review my changes.
 ```
 
-The `copilot` and `tester` **custom agents** are available in `.github/agents/` and can be copied to `~/.copilot/agents/` for use across all projects:
+The `copilot`, `tester`, and `language-lawyer` **custom agents** are available in `.github/agents/` and can be copied to `~/.copilot/agents/` for use across all projects:
 
 ```bash
 cp ~/.copilot/plugins/brooks-agent-team/.github/agents/*.agent.md ~/.copilot/agents/
@@ -72,7 +72,7 @@ Clone this repository to a stable location:
 git clone https://github.com/zakame/brooks-agent-team ~/.opencode/plugins/brooks-agent-team
 ```
 
-OpenCode auto-discovers agent definitions from `.opencode/agents/` in your project directory. To make the Copilot and Tester subagents available in a project:
+OpenCode auto-discovers agent definitions from `.opencode/agents/` in your project directory. To make the Copilot, Tester, and Language Lawyer subagents available in a project:
 
 ```bash
 cp ~/.opencode/plugins/brooks-agent-team/.opencode/agents/*.md .opencode/agents/
@@ -89,32 +89,30 @@ Use the copilot skill to review my changes.
 
 ### Claude Code
 
-#### For a single session
+#### Via marketplace (recommended)
 
-Start Claude Code with the `--plugin-dir` flag pointing to this repository:
+Register the marketplace, then install the plugin:
+
+```
+/plugin marketplace add zakame/skills-marketplace
+/plugin install brooks-agent-team@zakame-skills-marketplace
+```
+
+Skills are available immediately. To update to a newer version, re-run `/plugin install brooks-agent-team@zakame-skills-marketplace`.
+
+#### Developer mode (alternate)
+
+To load skills directly from a local clone — useful when developing or testing changes to the skills themselves:
 
 ```bash
+git clone https://github.com/zakame/brooks-agent-team /path/to/brooks-agent-team
 claude --plugin-dir /path/to/brooks-agent-team
 ```
 
-Skills are immediately available. To reload after making changes without restarting:
+To reload after making changes without restarting:
 
 ```
 /reload-plugins
-```
-
-#### Persistent use
-
-Clone this repository to a stable location and add the `--plugin-dir` flag to your shell alias or Claude Code configuration:
-
-```bash
-git clone https://github.com/zakame/brooks-agent-team ~/.claude/plugins/brooks-agent-team
-```
-
-Then start Claude Code with:
-
-```bash
-claude --plugin-dir ~/.claude/plugins/brooks-agent-team
 ```
 
 ## Usage
@@ -223,20 +221,22 @@ The AI reads each skill's `description` field and automatically invokes the rele
 
 ### Dispatch subagent roles
 
-The **Copilot** and **Tester** roles can be dispatched as independent subagents, allowing the Surgeon to continue working on the critical path while review or test writing happens in parallel.
+The **Copilot**, **Tester**, and **Language Lawyer** roles can be dispatched as independent subagents, allowing the Surgeon to continue working on the critical path while review, test writing, or edge-case research happens in parallel.
 
 **Copilot CLI** — use the custom agents in `.github/agents/` (copy to `~/.copilot/agents/` for cross-project use):
 ```
 Use the copilot agent to review the authentication changes.
 Use the tester agent to write tests for the payment module.
+Use the language-lawyer agent to research this API deprecation.
 ```
 
-**Claude Code** — use the dispatch templates in `agents/copilot.md` and `agents/tester.md`.
+**Claude Code** — use the dispatch templates in `agents/copilot.md`, `agents/tester.md`, and `agents/language-lawyer.md`.
 
 **OpenCode** — use the agent definitions in `.opencode/agents/`:
 ```
 Dispatch the Copilot agent to review the authentication changes.
 Dispatch the Tester agent to write tests for the payment module.
+Dispatch the Language Lawyer agent to research this API deprecation.
 ```
 
 The Copilot agent is read-only (permissions deny `edit`, `bash`, and `webfetch`); the Tester agent can write files and run shell commands (permissions allow `edit` and `bash`).
@@ -262,6 +262,7 @@ skills/                         Shared across all platforms (Agent Skills standa
 agents/                         Claude Code dispatch templates
   copilot.md                      Subagent template for Copilot role
   tester.md                       Subagent template for Tester role
+  language-lawyer.md              Subagent template for Language Lawyer role
 commands/                       Claude Code slash commands
   assemble-team.md                /assemble-team command
   assemble-with-agent-teams.md    /assemble-with-agent-teams command
@@ -269,10 +270,12 @@ commands/                       Claude Code slash commands
 .github/agents/                 GitHub Copilot CLI custom agents
   copilot.agent.md                Code reviewer agent
   tester.agent.md                 Adversarial tester agent
+  language-lawyer.agent.md        Language and framework edge-case agent
 
 .opencode/agents/               OpenCode custom agents
   copilot.md                      Code reviewer agent
   tester.md                       Adversarial tester agent
+  language-lawyer.md              Language and framework edge-case agent
 ```
 
 ### What lives where
@@ -283,7 +286,7 @@ Platform-specific files provide deeper integration:
 
 | Directory | Platform | Purpose |
 |-----------|----------|---------|
-| `.claude-plugin/` | Claude Code | Plugin manifest for `--plugin-dir` loading |
+| `.claude-plugin/` | Claude Code | Plugin manifest (marketplace and `--plugin-dir` loading) |
 | `agents/` | Claude Code | Dispatch templates for subagent roles (Copilot, Tester) |
 | `commands/` | Claude Code | Slash commands (`/assemble-team`, `/assemble-with-agent-teams`) |
 | `.github/agents/` | Copilot CLI | Custom agent definitions for `/agent` dispatch |
@@ -295,11 +298,11 @@ Platform-specific files provide deeper integration:
 
 The eight role skills in `skills/` are compatible with [OpenCode](https://opencode.ai) via the [Agent Skills open standard](https://github.com/agentskills/agentskills) — OpenCode reads `SKILL.md` files the same way Claude Code and Copilot CLI do.
 
-Full agent dispatch is supported through `.opencode/agents/`, which includes Copilot and Tester subagent definitions. These files use OpenCode's agent frontmatter format (`description`, `mode: subagent`, `permission` block). The permissions match each role's responsibilities: the Copilot denies edits and shell/web fetches, while the Tester allows edits and shell commands. File reads are allowed by default in OpenCode — set `permission.read: deny` in agent frontmatter to restrict them. See the [OpenCode agent specification](https://opencode.ai/docs) for the full permission model.
+Full agent dispatch is supported through `.opencode/agents/`, which includes Copilot, Tester, and Language Lawyer subagent definitions. These files use OpenCode's agent frontmatter format (`description`, `mode: subagent`, `permission` block). The permissions match each role's responsibilities: the Copilot denies edits and shell/web fetches, while the Tester allows edits and shell commands. File reads are allowed by default in OpenCode — set `permission.read: deny` in agent frontmatter to restrict them. See the [OpenCode agent specification](https://opencode.ai/docs) for the full permission model.
 
 If OpenCode updates its agent frontmatter format, check the [OpenCode agent specification](https://opencode.ai/docs) to verify these files remain current.
 
-> **Note for maintainers:** The agent body content is duplicated across three locations: `.opencode/agents/`, `agents/` (Claude Code), and `.github/agents/` (Copilot CLI). Any change to the review or test protocol must be applied in all three.
+> **Note for maintainers:** The agent body content is duplicated across three locations: `.opencode/agents/`, `agents/` (Claude Code), and `.github/agents/` (Copilot CLI). Any change to the review, test, or language research protocol must be applied in all three.
 
 ## Philosophy
 
