@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-05-15
+
+### Fixed
+
+- OpenCode install section: corrected install path from `~/.opencode/plugins/` to a clone-anywhere + symlink approach; added `mkdir -p` prerequisites before `ln -sf` and `cp` commands
+
+### Changed
+
+- Copilot CLI install section restructured into "Via marketplace (recommended)" and "Manual install (alternate)" subsections, matching the Claude Code section structure; marketplace install via `zakame/skills-marketplace` is now the primary path with `copilot plugin update` for upgrades
+- Copilot CLI custom agents are now auto-discovered after `copilot plugin install`; manual copy to `~/.copilot/agents/` documented as fallback only
+- `.claude-plugin/` manifest directory now recognized by both Claude Code and Copilot CLI for marketplace loading
+- OpenCode install section restructured into "Skills" and "Subagent roles" subsections; corrected install path from `~/.opencode/plugins/` to a clone-anywhere + symlink approach targeting `.opencode/skills/` or `~/.config/opencode/skills/`
+- OpenCode doc links updated to specific pages (`/docs/agents/`, `/docs/skills/`)
+- OpenCode compatibility section: permission key descriptions clarified (`edit`, `bash`, `webfetch`, `read` with their exact tool scopes); Language Lawyer permission profile added
+
 ## [1.0.0] - 2026-05-13
 
 ### Added
@@ -55,5 +70,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Surgeon skill `description` frontmatter value quoted to prevent YAML parsing issues
 
-[Unreleased]: https://github.com/zakame/brooks-agent-team/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/zakame/brooks-agent-team/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/zakame/brooks-agent-team/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/zakame/brooks-agent-team/releases/tag/v1.0.0
