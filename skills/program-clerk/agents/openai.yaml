@@ -1,0 +1,10 @@
+# Codex Agent Skills policy for the Program Clerk role.
+#
+# The Program Clerk is an inline-only role per the Brooks Surgical Team
+# architecture — it proposes reorganizations and audits code structure but
+# should not auto-trigger on user prompts. The Surgeon invokes it
+# deliberately when codebase organization is in question.
+#
+# See: https://developers.openai.com/codex/skills (Optional metadata)
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,28 @@
+{
+  "name": "brooks-agent-team",
+  "version": "1.1.1",
+  "description": "Surgical team collaboration skills for AI-assisted software development",
+  "author": {
+    "name": "Zak Elep",
+    "email": "zakame@zakame.net"
+  },
+  "homepage": "https://github.com/zakame/brooks-agent-team",
+  "repository": "https://github.com/zakame/brooks-agent-team",
+  "license": "MIT",
+  "keywords": ["skills", "surgical-team", "brooks", "collaboration", "code-review", "testing"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Brooks Surgical Team",
+    "shortDescription": "Role-aware software development workflows",
+    "longDescription": "Skills that organize AI-assisted software development around Fred Brooks' Surgical Team model.",
+    "developerName": "Zak Elep",
+    "category": "Productivity",
+    "capabilities": ["Read", "Write"],
+    "websiteURL": "https://github.com/zakame/brooks-agent-team",
+    "defaultPrompt": [
+      "Use the assemble-team skill to brief me on this project.",
+      "Use the copilot skill to review the completed diff.",
+      "Use the tester skill to design an adversarial test strategy."
+    ]
+  }
+}
