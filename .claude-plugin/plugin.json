@@ -1,7 +1,7 @@
 {
   "name": "brooks-agent-team",
   "description": "Surgical team collaboration skills for Claude Code, inspired by Fred Brooks' Mythical Man-Month",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "author": {
     "name": "Zak Elep",
     "email": "zakame@zakame.net"
