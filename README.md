@@ -76,26 +76,36 @@ See [Dispatch subagent roles](#dispatch-subagent-roles) for invocation examples.
 
 ### OpenCode
 
-Clone this repository to a stable location:
+#### Skills
+
+OpenCode discovers skills from `.opencode/skills/`, `.claude/skills/`, and `~/.config/opencode/skills/` (global). Clone this repository to a stable location of your choice, then symlink each skill subdirectory into a discovery path:
 
 ```bash
-git clone https://github.com/zakame/brooks-agent-team ~/.opencode/plugins/brooks-agent-team
+git clone https://github.com/zakame/brooks-agent-team /path/to/brooks-agent-team
+
+# Project-level (one-time per project):
+mkdir -p .opencode/skills
+ln -sf /path/to/brooks-agent-team/skills/* .opencode/skills/
+
+# OR global (available in all projects):
+mkdir -p ~/.config/opencode/skills
+ln -sf /path/to/brooks-agent-team/skills/* ~/.config/opencode/skills/
 ```
 
-OpenCode auto-discovers agent definitions from `.opencode/agents/` in your project directory. To make the Copilot, Tester, and Language Lawyer subagents available in a project:
+To update, run `git pull` inside `/path/to/brooks-agent-team`.
+
+#### Subagent roles
+
+OpenCode auto-discovers agent definitions from `.opencode/agents/` in your project directory. To make the Copilot, Tester, and Language Lawyer subagents available:
 
 ```bash
-cp ~/.opencode/plugins/brooks-agent-team/.opencode/agents/*.md .opencode/agents/
+mkdir -p .opencode/agents
+cp /path/to/brooks-agent-team/.opencode/agents/*.md .opencode/agents/
 ```
 
-For cross-project use, consult the [OpenCode agent documentation](https://opencode.ai/docs) for global agent configuration paths.
+For cross-project use, global agent discovery paths are not yet standardized in OpenCode — check the [OpenCode agent documentation](https://opencode.ai/docs/agents/) for current options.
 
-Skills are available via the [Agent Skills open standard](https://github.com/agentskills/agentskills). OpenCode auto-discovers `SKILL.md` files from registered plugin directories — consult the [OpenCode documentation](https://opencode.ai/docs) for how to configure a skills directory. Once available, skills can be invoked directly in a session:
-
-```
-Use the surgeon skill to start implementing this feature.
-Use the copilot skill to review my changes.
-```
+See [Dispatch subagent roles](#dispatch-subagent-roles) for invocation examples.
 
 ### Claude Code
 
@@ -249,7 +259,7 @@ Dispatch the Tester agent to write tests for the payment module.
 Dispatch the Language Lawyer agent to research this API deprecation.
 ```
 
-The Copilot agent is read-only (permissions deny `edit`, `bash`, and `webfetch`); the Tester agent can write files and run shell commands (permissions allow `edit` and `bash`).
+The Copilot agent is read-only (permissions deny `edit`, `bash`, and `webfetch`); the Tester agent can write files and run shell commands (permissions allow `edit` and `bash`); the Language Lawyer can fetch web resources and run shell commands (permissions allow `bash` and `webfetch`, deny `edit`).
 
 ## Repository Structure
 
@@ -308,11 +318,11 @@ Platform-specific files provide deeper integration:
 
 ### OpenCode compatibility
 
-The eight role skills in `skills/` are compatible with [OpenCode](https://opencode.ai) via the [Agent Skills open standard](https://github.com/agentskills/agentskills) — OpenCode reads `SKILL.md` files the same way Claude Code and Copilot CLI do.
+The eight role skills in `skills/` are compatible with [OpenCode](https://opencode.ai) via the [Agent Skills open standard](https://github.com/agentskills/agentskills) — OpenCode reads `SKILL.md` files the same way Claude Code and Copilot CLI do. See [OpenCode skills documentation](https://opencode.ai/docs/skills/) for the full discovery path list and `SKILL.md` format reference.
 
-Full agent dispatch is supported through `.opencode/agents/`, which includes Copilot, Tester, and Language Lawyer subagent definitions. These files use OpenCode's agent frontmatter format (`description`, `mode: subagent`, `permission` block). The permissions match each role's responsibilities: the Copilot denies edits and shell/web fetches, while the Tester allows edits and shell commands. File reads are allowed by default in OpenCode — set `permission.read: deny` in agent frontmatter to restrict them. See the [OpenCode agent specification](https://opencode.ai/docs) for the full permission model.
+Full agent dispatch is supported through `.opencode/agents/`, which includes Copilot, Tester, and Language Lawyer subagent definitions. These files use OpenCode's [agent frontmatter format](https://opencode.ai/docs/agents/) (`description`, `mode: subagent`, `permission` block). Permission keys map to specific tools: `edit` controls write/edit/patch operations, `bash` controls shell commands, `webfetch` controls web fetches, and `read` controls file reads (allowed by default). The Copilot sets `edit: deny`, `bash: deny`, and `webfetch: deny`; the Tester sets `edit: allow` and `bash: allow`. To restrict file reads: `read: deny`.
 
-If OpenCode updates its agent frontmatter format, check the [OpenCode agent specification](https://opencode.ai/docs) to verify these files remain current.
+If OpenCode updates its agent frontmatter format, check the [OpenCode agent specification](https://opencode.ai/docs/agents/) to verify these files remain current.
 
 > **Note for maintainers:** The agent body content is duplicated across three locations: `.opencode/agents/`, `agents/` (Claude Code), and `.github/agents/` (Copilot CLI). Any change to the review, test, or language research protocol must be applied in all three.
 
