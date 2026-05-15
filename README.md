@@ -33,36 +33,46 @@ The `SKILL.md` format used here conforms to the [Agent Skills open standard](htt
 
 ### GitHub Copilot CLI
 
-Clone this repository to a stable location:
+#### Via marketplace (recommended)
+
+Register the marketplace, then install the plugin:
+
+```
+copilot plugin marketplace add zakame/skills-marketplace
+copilot plugin install brooks-agent-team@zakame-skills-marketplace
+```
+
+Skills are available immediately. To update to a newer version:
+
+```
+copilot plugin update brooks-agent-team
+```
+
+#### Manual install (alternate)
+
+To load skills directly from a local clone — useful when developing or testing changes to the skills themselves:
 
 ```bash
-git clone https://github.com/zakame/brooks-agent-team ~/.copilot/plugins/brooks-agent-team
+git clone https://github.com/zakame/brooks-agent-team /path/to/brooks-agent-team
 ```
 
 Register the skills directory in a Copilot CLI session:
 
 ```
-/skills add ~/.copilot/plugins/brooks-agent-team/skills
+/skills add /path/to/brooks-agent-team/skills
 ```
 
-This makes all team skills available. To persist across sessions, add the directory permanently using `/skills add`. Skills are immediately usable — Copilot will invoke them automatically based on context, or you can name them explicitly in your prompt:
+#### Custom agents
 
-```
-Use the surgeon skill to start implementing this feature.
-Use the copilot skill to review my changes.
-```
+The `copilot`, `tester`, and `language-lawyer` **custom agents** are bundled in `.github/agents/`. For marketplace installs, they are automatically available via `/agents` after `copilot plugin install` — no additional setup needed.
 
-The `copilot`, `tester`, and `language-lawyer` **custom agents** are available in `.github/agents/` and can be copied to `~/.copilot/agents/` for use across all projects:
+For manual installs, if the agents are not discovered automatically, copy them to `~/.copilot/agents/`:
 
 ```bash
-cp ~/.copilot/plugins/brooks-agent-team/.github/agents/*.agent.md ~/.copilot/agents/
+cp /path/to/brooks-agent-team/.github/agents/*.agent.md ~/.copilot/agents/
 ```
 
-Then invoke them via `/agent` or directly in a prompt:
-
-```
-Use the copilot agent to review the authentication changes.
-```
+See [Dispatch subagent roles](#dispatch-subagent-roles) for invocation examples.
 
 ### OpenCode
 
@@ -98,7 +108,7 @@ Register the marketplace, then install the plugin:
 /plugin install brooks-agent-team@zakame-skills-marketplace
 ```
 
-Skills are available immediately. To update to a newer version, re-run `/plugin install brooks-agent-team@zakame-skills-marketplace`.
+Skills are available immediately. To update to a newer version, run `/plugin install brooks-agent-team@zakame-skills-marketplace`.
 
 #### Developer mode (alternate)
 
@@ -286,13 +296,15 @@ Platform-specific files provide deeper integration:
 
 | Directory | Platform | Purpose |
 |-----------|----------|---------|
-| `.claude-plugin/` | Claude Code | Plugin manifest (marketplace and `--plugin-dir` loading) |
+| `.claude-plugin/` | Claude Code & Copilot CLI | Plugin manifest (marketplace loading) |
 | `agents/` | Claude Code | Dispatch templates for subagent roles (Copilot, Tester) |
 | `commands/` | Claude Code | Slash commands (`/assemble-team`, `/assemble-with-agent-teams`) |
 | `.github/agents/` | Copilot CLI | Custom agent definitions for `/agent` dispatch |
 | `.opencode/agents/` | OpenCode | Custom agent definitions for subagent dispatch |
 | `skills/assemble-team/` | Copilot CLI & OpenCode | Team briefing skill |
 | `skills/assemble-with-fleet/` | Copilot CLI & OpenCode | Parallel spawn via fleet mode or task tool |
+
+> **Note:** Copilot CLI recognizes `.claude-plugin/` in addition to `.github/plugin/` when loading plugin manifests.
 
 ### OpenCode compatibility
 
