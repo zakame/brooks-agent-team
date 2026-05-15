@@ -23,10 +23,10 @@ This framework organizes AI-assisted software development around Fred Brooks' Su
 | Copilot | `copilot` | Before completing any significant feature | Yes (or inline review) |
 | Tester | `tester` | Any feature, bugfix, or quality concern | Yes (or inline) |
 | Administrator | `administrator` | Multi-task planning, tracking, prioritization | No — inline only |
-| Editor | `editor` | Docs, specs, READMEs, commit messages | No or Yes |
-| Program Clerk | `program-clerk` | File reorganization, naming, library structure | No — inline only |
-| Toolsmith | `toolsmith` | Repetitive tasks, missing automation, workflow pain | No or Yes |
-| Language Lawyer | `language-lawyer` | Framework subtlety, edge case, version concern | No or Yes |
+| Editor | `editor` | Docs, specs, READMEs, commit messages | Optional (via agent-teams) |
+| Program Clerk | `program-clerk` | File reorganization, naming, library structure | Optional (via agent-teams) |
+| Toolsmith | `toolsmith` | Repetitive tasks, missing automation, workflow pain | Optional (via agent-teams) |
+| Language Lawyer | `language-lawyer` | Framework subtlety, edge case, version concern | Yes (or inline) |
 
 ## When to Dispatch vs. Inline Guidance
 
