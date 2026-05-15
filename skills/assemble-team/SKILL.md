@@ -1,6 +1,6 @@
 ---
 name: assemble-team
-description: "Copilot CLI or OpenCode — Use at the start of any development session to introduce the Brooks Surgical Team members, survey the current project, and present a contextual briefing on which roles are most relevant and how to invoke each one"
+description: "OpenAI Codex, Copilot CLI, Claude Code, or OpenCode — Use at the start of any development session to introduce the Brooks Surgical Team members, survey the current project, and present a contextual briefing on which roles are most relevant and how to invoke each one"
 ---
 
 # Assemble the Surgical Team

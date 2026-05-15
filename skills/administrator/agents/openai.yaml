@@ -1,0 +1,10 @@
+# Codex Agent Skills policy for the Administrator role.
+#
+# The Administrator is an inline-only role per the Brooks Surgical Team
+# architecture — it tracks task state and surfaces blockers but should not
+# auto-trigger on user prompts. The Surgeon invokes it deliberately when
+# project state needs to be made explicit.
+#
+# See: https://developers.openai.com/codex/skills (Optional metadata)
+policy:
+  allow_implicit_invocation: false

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- OpenAI Codex plugin manifest (`.codex-plugin/plugin.json`) for marketplace packaging of the shared skills
+
+### Changed
+
+- Codex documentation now separates marketplace-installed skills from project/user `.codex/agents/` custom subagent setup
+- `assemble-team` skill metadata now names OpenAI Codex as a supported host for implicit skill matching
+
 ## [1.1.1] - 2026-05-15
 
 ### Fixed
@@ -76,6 +85,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Surgeon skill `description` frontmatter value quoted to prevent YAML parsing issues
 
-[Unreleased]: https://github.com/zakame/brooks-agent-team/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/zakame/brooks-agent-team/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/zakame/brooks-agent-team/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/zakame/brooks-agent-team/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/zakame/brooks-agent-team/releases/tag/v1.0.0

@@ -1,0 +1,30 @@
+# Brooks Surgical Team — Codex Configuration
+#
+# Codex support has two surfaces:
+#   Skills:    `.agents/skills/` symlinks to the shared `skills/` directories
+#   Subagents: `.codex/agents/*.toml` defines project-scoped custom agents
+#
+# This config sets only the session-wide [agents] tunables and re-asserts the
+# multi_agent feature flag. Each custom agent file declares its own top-level
+# `name`, `description`, and `developer_instructions` fields.
+#
+# See: https://developers.openai.com/codex/subagents
+#      https://developers.openai.com/codex/config-basic
+
+# multi_agent is Stable and on by default. Setting it here explicitly guards
+# against a user- or system-level config that has disabled it.
+[features]
+multi_agent = true
+
+[agents]
+max_threads = 8
+# max_depth = 1 (the spec default) allows the Surgeon to spawn a specialist
+# while preventing the specialist from spawning further children. This matches
+# the Brooks intent: one level of dispatch, no grandchildren. The [CODEX-STOP]
+# prose inside each agent's developer_instructions is belt-and-suspenders —
+# advisory only; Codex enforces depth via this setting.
+max_depth = 1
+
+# Per-agent definitions are auto-discovered from .codex/agents/*.toml by
+# directory scan. No explicit registration is needed here per the current
+# Subagents spec.
