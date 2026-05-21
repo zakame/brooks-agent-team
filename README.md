@@ -259,7 +259,7 @@ Dispatch the Tester agent to write tests for the payment module.
 Dispatch the Language Lawyer agent to research this API deprecation.
 ```
 
-The Copilot agent is read-only (permissions deny `edit`, `bash`, and `webfetch`); the Tester agent can write files and run shell commands (permissions allow `edit` and `bash`); the Language Lawyer can fetch web resources and run shell commands (permissions allow `bash` and `webfetch`, deny `edit`).
+The Copilot agent is read-only (permissions deny `edit`, `bash`, and `webfetch`); the Tester agent can write files and run shell commands (permissions allow `edit` and `bash`); the Language Lawyer can search the web, fetch URLs, and run shell commands (permissions allow `bash`, `webfetch`, and `websearch`, deny `edit`).
 
 ## Repository Structure
 
