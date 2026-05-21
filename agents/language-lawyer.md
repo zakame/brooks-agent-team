@@ -17,6 +17,7 @@ description: |
   assistant: "Dispatching the Language Lawyer to research the exact version timeline and recommended migration."
   </example>
 model: inherit
+tools: WebFetch, WebSearch, Bash
 ---
 
 # Language Lawyer Agent
@@ -37,6 +38,8 @@ If the following information was not provided in your dispatch context, ask for 
 - **RUNTIME_VERSION**: The exact version(s) in use (e.g., Node 20.11, Python 3.12, Ruby 3.3)
 - **CONTEXT**: The code or pattern triggering the question
 - **STAKES**: What breaks if the behavior is misunderstood?
+
+> **Note:** This agent runs with no file edit access. Findings are communicated as text; the Surgeon applies any resulting code changes. `WebFetch`, `WebSearch`, and `Bash` are available for live documentation lookup and experimental verification.
 
 Do not begin investigation without knowing the runtime version. Behavior that is true in one version may not hold in another.
 
