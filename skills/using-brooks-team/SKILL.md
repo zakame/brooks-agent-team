@@ -4,9 +4,9 @@ description: Use at the start of any substantial development session to orient t
 ---
 
 <SUBAGENT-STOP>
-If you were dispatched as a Copilot, Tester, Editor, Toolsmith, Language Lawyer, or Program Clerk subagent,
+If you were dispatched as a Copilot, Tester, Editor, Toolsmith, Language Lawyer, Program Clerk, or Administrator subagent,
 skip this skill. Your role instructions are in your agent prompt.
-(Administrator is intentionally omitted — it has no dispatch template and is inline-only.)
+(Administrator is inline-only on Claude Code, Copilot CLI, and OpenCode; on Codex it is a dispatchable custom agent via `.codex/agents/administrator.toml`.)
 </SUBAGENT-STOP>
 
 # Using the Brooks Surgical Team
@@ -22,10 +22,10 @@ This framework organizes AI-assisted software development around Fred Brooks' Su
 | Surgeon | `surgeon` | All implementation work | No — you ARE the surgeon |
 | Copilot | `copilot` | Before completing any significant feature | Yes (or inline review) |
 | Tester | `tester` | Any feature, bugfix, or quality concern | Yes (or inline) |
-| Administrator | `administrator` | Multi-task planning, tracking, prioritization | No — inline only |
-| Editor | `editor` | Docs, specs, READMEs, commit messages | Optional (via agent-teams) |
-| Program Clerk | `program-clerk` | File reorganization, naming, library structure | Optional (via agent-teams) |
-| Toolsmith | `toolsmith` | Repetitive tasks, missing automation, workflow pain | Optional (via agent-teams) |
+| Administrator | `administrator` | Multi-task planning, tracking, prioritization | Yes (in Codex) / inline on other platforms |
+| Editor | `editor` | Docs, specs, READMEs, commit messages | Optional dispatch in Codex; optional teammate in Claude Agent Teams |
+| Program Clerk | `program-clerk` | File reorganization, naming, library structure | Optional dispatch in Codex; optional teammate in Claude Agent Teams |
+| Toolsmith | `toolsmith` | Repetitive tasks, missing automation, workflow pain | Optional dispatch in Codex; optional teammate in Claude Agent Teams |
 | Language Lawyer | `language-lawyer` | Framework subtlety, edge case, version concern | Yes (or inline) |
 
 ## When to Dispatch vs. Inline Guidance
@@ -33,12 +33,14 @@ This framework organizes AI-assisted software development around Fred Brooks' Su
 ```
 Dispatch subagent for:             Inline guidance for:
 ──────────────────────             ────────────────────
-Code review (Copilot)              Planning (Administrator)
-Test writing (Tester)              File organization (Program Clerk)
+Code review (Copilot)              Planning (Administrator)†
+Test writing (Tester)              File organization (Program Clerk)†
 Language investigations (Lawyer)   Small tool scripts (Toolsmith)
 Large tool builds (Toolsmith)
 Doc writing passes (Editor)
 ```
+
+† On Codex, Administrator, Editor, Toolsmith, and Program Clerk are also dispatchable as custom agents under `.codex/agents/`.
 
 ## Skill Priority
 

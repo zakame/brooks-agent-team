@@ -9,6 +9,10 @@ description: "Copilot CLI fleet mode or OpenCode task tool — Spawn a Brooks Su
 You are already operating as a dispatched subagent. Do not invoke `assemble-with-fleet`, `using-brooks-team`, or `surgeon` skills. Invoking `assemble-with-fleet` from inside a subagent would spawn additional subagents recursively.
 </SUBAGENT-STOP>
 
+<CODEX-STOP>
+OpenAI Codex has no fleet mode or task tool, so this skill does not apply there. If you are running under Codex, stop here and use explicit custom-agent dispatch instead: prompt the main session to spawn the specialist agents defined in `.codex/agents/` (see `AGENTS.md` for role routing).
+</CODEX-STOP>
+
 When invoked, do the following steps in order.
 
 ## Step 1: Quick Project Survey
