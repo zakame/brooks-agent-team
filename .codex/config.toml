@@ -1,0 +1,16 @@
+# Brooks Surgical Team — Codex Configuration
+#
+# Multi-agent support is stable and enabled by default in current Codex CLI releases.
+# Custom agents are discovered from standalone TOML files in .codex/agents/
+# for project-scoped use or ~/.codex/agents/ for global use. This file only
+# sets global subagent runtime limits.
+#
+# See: https://learn.chatgpt.com/docs/config-file/config-reference
+
+[agents]
+# max_concurrent_threads_per_session defaults to 6 in current Codex; set to 8 here
+# to allow more concurrent specialist dispatches during large surgical team sessions.
+max_concurrent_threads_per_session = 8
+# Codex has no config-level agent-nesting-depth limit. Re-entrant dispatch (a
+# specialist invoking another specialist) is discouraged only via the
+# [CODEX-STOP] instruction guards in each agent's developer_instructions.

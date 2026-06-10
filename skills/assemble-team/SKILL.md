@@ -1,6 +1,6 @@
 ---
 name: assemble-team
-description: "Copilot CLI or OpenCode — Use at the start of any development session to introduce the Brooks Surgical Team members, survey the current project, and present a contextual briefing on which roles are most relevant and how to invoke each one"
+description: "Claude Code, OpenAI Codex, Copilot CLI, or OpenCode — Use at the start of any development session to introduce the Brooks Surgical Team members, survey the current project, and present a contextual briefing on which roles are most relevant and how to invoke each one"
 ---
 
 # Assemble the Surgical Team
@@ -49,7 +49,7 @@ You own all critical design and implementation decisions. The team supports you.
 ---
 
 **Administrator** — Task and project tracking
-- Invoke: `administrator` skill (inline only)
+- Invoke: `administrator` skill; in Codex, dispatch the `administrator` custom agent for parallel coordination
 - Best for: [describe current project complexity — number of open tasks, known blockers]
 - Trigger: Multi-task sessions; unclear priorities; scope creep
 
@@ -63,7 +63,7 @@ You own all critical design and implementation decisions. The team supports you.
 ---
 
 **Program Clerk** — Code organization
-- Invoke: `program-clerk` skill (inline only)
+- Invoke: `program-clerk` skill; in Codex, dispatch the `program-clerk` custom agent for parallel structure review
 - Best for: [describe any structural concerns observed — large files, unclear naming, etc.]
 - Trigger: Files growing too large; inconsistent naming; tangled imports
 
@@ -91,5 +91,8 @@ End with:
 >
 > If you have a task in mind, describe it and I'll identify which team members should be involved.
 >
-> **Want real parallel teammates?** Use the `assemble-with-fleet` skill to spawn independent
-> sessions per role using Copilot CLI's fleet mode or OpenCode's task tool.
+> **Want parallel support?**
+> - In Codex: explicitly ask me to spawn the relevant custom agents, then use `/agent`
+>   to inspect or steer their threads.
+> - In Copilot CLI or OpenCode: use the `assemble-with-fleet` skill to spawn independent
+>   sessions per role.

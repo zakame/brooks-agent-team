@@ -7,18 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- OpenAI Codex compatibility: `.codex/agents/*.toml` custom agents for all seven specialist roles, `.codex/config.toml` subagent runtime settings, `AGENTS.md` for Codex repository guidance, and a `.agents/skills/` symlink mirror for Codex skill discovery
+
 ### Fixed
 
 - Language Lawyer subagent (`agents/language-lawyer.md`, `.github/agents/language-lawyer.agent.md`) had no file read access on Claude Code and Copilot CLI, despite its protocol requiring it to read the code triggering the question
 - Copilot subagent had no enforced read-only restriction on Claude Code and Copilot CLI, despite the README documenting it as read-only; only the OpenCode copy actually denied edit access
 - `assemble-with-fleet` skill exclusion was missing from the Claude Code copies of the Copilot, Tester, and Language Lawyer dispatch templates (`agents/*.md`), present only in the OpenCode and Copilot CLI copies
+- `assemble-team` skill exclusion was missing from all three of the Claude Code, Copilot CLI, and OpenCode copies of the Copilot, Tester, and Language Lawyer dispatch templates; Codex's `[CODEX-STOP]` blocks already excluded it and were used as the reference for backporting this fix
 - Language Lawyer permission notes had drifted to three different wordings across `agents/`, `.opencode/agents/`, and `.github/agents/`
+- `.codex/config.toml` used `agents.max_threads` (a documented legacy alias) and an undocumented `agents.max_depth` key with no current basis in the Codex config schema; renamed to `agents.max_concurrent_threads_per_session` and removed the unverified depth key
+- Codex documentation links updated from `developers.openai.com/codex` to the current `learn.chatgpt.com` location
 
 ### Changed
 
 - `skills/program-clerk/SKILL.md` now notes how this role relates to Brooks' original Program Clerk (a technical records archivist), and why it's refocused on code structure now that version control covers the records-keeping job
 - README Inspiration section now names conceptual integrity as Brooks' stated rationale for the surgical team structure, and documents why the two secretary roles are omitted
-- README's maintainer note on agent-file duplication is now a concrete checklist of what must stay in sync across platforms
+- README's maintainer note on agent-file duplication is now a concrete checklist of what must stay in sync across platforms, updated to reflect Codex as a fourth platform
+- README's Agent Skills standard support statement (Inspiration section) now consistently lists Codex alongside the other three platforms instead of describing it as a separate addendum
 
 ## [1.1.1] - 2026-05-15
 
