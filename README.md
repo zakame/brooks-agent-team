@@ -1,6 +1,6 @@
 # brooks-agent-team
 
-A skills plugin that organizes AI-assisted software development around Fred Brooks' **Surgical Team** model from *The Mythical Man-Month* (1975). Compatible with **OpenAI Codex**, **GitHub Copilot CLI**, **Claude Code**, and **OpenCode**.
+A skills plugin that organizes AI-assisted software development around Fred Brooks' **Surgical Team** model from *The Mythical Man-Month* (1975). Compatible with **OpenAI Codex**, **Grok Build**, **GitHub Copilot CLI**, **Claude Code**, and **OpenCode**.
 
 Instead of every team member working on all parts of a system, the Surgical Team concentrates critical work in one skilled "surgeon" (chief programmer), supported by specialized roles that keep the surgeon focused and productive. This plugin maps those roles to agent skills and dispatch templates.
 
@@ -176,14 +176,77 @@ To reload after making changes without restarting:
 /reload-plugins
 ```
 
+### Grok Build
+
+Grok Build has moved fast: this integration was originally written against 0.2.43 (2026-06), revised against 1.0.3 (2026-08-14), and re-verified against 1.0.13 (2026-09-01, the current release). All claims below still held as of 1.0.13 except `capability_mode`, which turned out to never have been a real `spawn_subagent` parameter (see the caveat under "Running the parallel team safely" below). If you're on a materially newer Grok Build release, re-check this section before trusting it.
+
+#### Via Claude Code plugin compatibility (recommended)
+
+Grok Build automatically reads Claude Code marketplaces, plugins, and skills via the `[compat.claude]` config block (`skills`, `rules`, `agents`, `mcps`, `hooks`, `sessions` — each defaults to `true` in `~/.grok/config.toml`). If you have installed `brooks-agent-team` as a Claude Code plugin (see the [Claude Code section](#claude-code) above), Grok picks it up with no extra setup — `grok inspect` lists the skills under `plugin: brooks-agent-team [claude]` and the dispatch agents under `plugin: brooks-agent-team` (verified on Grok 1.0.3). Note: `[compat.claude].agents` only gates `~/.claude/`-scoped instruction files and project `CLAUDE*.md`, not the `agents/` discovery below — that's separate, general plugin-component discovery.
+
+Note that this loads the **released plugin version** from your Claude Code install. To pick up newer skills before a release, use the development setup below.
+
+#### Local clone (development / testing)
+
+**If you already have `brooks-agent-team` installed as a Claude Code plugin** (the recommended path above), Grok auto-discovers it via Claude-plugin compatibility, and that install will silently take priority over most other ways of pointing Grok at a local clone (verified live, 2026-09-01; see the two caveats below). The one method confirmed to reliably override it is a project-scoped plugin symlink:
+
+```bash
+git clone https://github.com/zakame/brooks-agent-team /path/to/brooks-agent-team
+
+mkdir -p .grok/plugins
+ln -sf /path/to/brooks-agent-team .grok/plugins/brooks-agent-team
+```
+
+On the Grok Build version tested (1.0.3), `.grok/plugins/` was observed to take priority over the Claude-plugin-compatibility layer, cleanly replacing the installed version's skills and agents with the clone's, without needing to uninstall anything. `grok inspect` will show the skills as `plugin: brooks-agent-team` with no `[claude]` tag, and file paths pointing at the clone. First use in a new project may show the plugin as untrusted; that only affects hooks and MCP servers (neither of which this plugin uses), not skill discovery. This discovery-order behavior isn't spelled out in Grok's public docs as a guaranteed contract, so re-verify with `grok inspect` if it stops working on a newer Grok release.
+
+The following two methods also work, but each was observed to fail in its own way if `brooks-agent-team` is also installed via Claude Code (now, or later if you install it that way after setting one of these up). The project-scoped method above avoids both failure modes, so prefer it whenever a competing install might exist:
+
+- Register the clone as a plugin path in `~/.grok/config.toml`. This also requires explicitly enabling it, and was observed to lose silently to any competing install of the same plugin name, including a Claude-plugin-compat one:
+
+  ```toml
+  [plugins]
+  paths = ["/path/to/brooks-agent-team"]
+  enabled = ["brooks-agent-team"]
+  ```
+
+- Or symlink the skills directly for project use. This scans as generic project skills, additive to (not replacing) any plugin-sourced skills of the same name, so a skill available from both sources will appear twice in `grok inspect` (once `type: project`, once `type: plugin`) if brooks-agent-team is also installed as a plugin:
+
+  ```bash
+  mkdir -p .grok/skills
+  ln -sf /path/to/brooks-agent-team/skills/* .grok/skills/
+  ```
+
+Run `grok inspect` to confirm what Grok discovered for the current directory. Check for a stray `[claude]` tag (stale install still winning) or a duplicate skill name (both installs loaded side by side) before trusting local changes are actually in effect. To update a clone: `git pull` inside it.
+
+#### Agent discovery
+
+`.grok/agents/` discovery is documented in Grok's subagent docs: project-scope discovery is confirmed working — with your CWD inside the cloned repo, `grok inspect` lists `brooks-copilot`, `brooks-tester`, and `brooks-language-lawyer` as `project` agents (verified on Grok 1.0.3). Copy them to `~/.grok/agents/` for cross-project use. As of 1.0.3, agent frontmatter supports a real `tools:` field (restricts the subagent's available tools) and `mcpInheritance:` (controls which parent MCP servers a spawned subagent inherits) — `color:`/`model:` remain Claude-Code-only and still don't apply to Grok agents.
+
+**Current Grok subagent spawning notes (2026-08-14, verified against Grok 1.0.3):**
+
+The `assemble-with-grok-team` skill spawns each teammate directly with its full task in one call — no lightweight-first-turn/resume split:
+- Copilot, Tester, and Language Lawyer are spawned directly by `subagent_type` (`brooks-copilot`, `brooks-tester`, `brooks-language-lawyer`) — their `.grok/agents/brooks-*.md` body is the role contract. Editor/Toolsmith/Program Clerk have no native Grok agent definition, so they spawn via `general-purpose` with an explicit skill-invocation instruction instead.
+- This follows live headless smoke testing confirming Grok 1.0.3 runs named custom agents fully autonomously through multi-tool-call tasks (2-4 tool calls each, scaling with task size) — the single-turn limitation observed on Grok 0.2.43, which used to force a `general-purpose` + `resume_from` workaround, is resolved.
+- The Surgeon monitors via `get_command_or_subagent_output` (Ctrl+T for todos, Ctrl+G for tasks, queue pane for background status); `resume_from` remains available for a genuine follow-up round after a teammate's task completes, but isn't needed for the first result.
+
+**Running the parallel team safely:**
+- Start via the `assemble-with-grok-team` skill — it sets up the shared `todo_write` list (the team's single source of truth, visible via Ctrl+T), the right `isolation` per role, and the file ownership rules. **Caveat (corrected 2026-09-01):** `capability_mode` is not a real `spawn_subagent` parameter, confirmed against current Grok documentation; an earlier round of this integration mistakenly treated it as one. `isolation: "worktree"` is enforced and is the real safety boundary for writers. For read-only roles, `.grok/agents/brooks-copilot.md`'s `tools:` frontmatter achieves a genuine hard write-block (confirmed); `brooks-language-lawyer.md`'s does not fully close the gap, since its required Bash access reopens a write-capable tool as a side effect — its "never edit" behavior still relies on its own prompt contract.
+- Monitor with **Ctrl+T** (shared todos), **Ctrl+G** (tasks + background subagents), and **Ctrl+;** (queue / prompt status).
+- Writing roles (Tester, Editor, Toolsmith, Program Clerk) work in isolated worktrees — their changes don't touch your workspace until you apply them. **Review before applying:** list worktrees with `x.ai/git/worktree/list` (or use the path the teammate reported), read the full diff with `git -C <worktree-path> diff HEAD`, then `x.ai/git/worktree/apply <id>` and check `git status`. If the `x.ai/git/worktree/*` extensions aren't in your tool list, fall back to manual git inspection and copying only the role's owned paths.
+- Run one writing teammate at a time unless their ownership areas are provably disjoint — the skill includes a Surgeon checklist for this.
+- Capture subagent IDs from each spawn result; you'll need them for `resume_from` follow-ups or `kill_command_or_subagent`.
+
+For the full worktree review/apply workflow, spawn templates for every role, and safety rules, see `skills/assemble-with-grok-team/SKILL.md`.
+
 ## Usage
 
 ### Two ways to start
 
 | Skill / Command | Tool | When to use |
 |---------|------|-------------|
-| `assemble-team` skill | OpenAI Codex, Copilot CLI, Claude Code & OpenCode | Single-session work — one AI instance plays all roles sequentially |
+| `assemble-team` skill | All platforms (OpenAI Codex, Grok Build, Copilot CLI, Claude Code & OpenCode) | Single-session work — one AI instance plays all roles sequentially |
 | `/assemble-team` command | Claude Code only | Same as above, as a slash command |
+| `assemble-with-grok-team` skill | Grok Build only | Parallel work — spawns one independent subagent per role using Grok's native `spawn_subagent` + worktrees + shared `todo_write` list |
 | `assemble-with-fleet` skill | Copilot CLI & OpenCode | Parallel work — spawns one independent session per role (Copilot CLI uses `/fleet`; OpenCode uses the task tool) |
 | `/assemble-with-agent-teams` command | Claude Code only | Parallel work — spawns via Claude Code Agent Teams |
 
@@ -225,6 +288,13 @@ Spawn a copilot agent to review the current diff, a tester agent to audit test g
 and a language-lawyer agent to check version-sensitive API claims. Wait for all
 three, then summarize their findings by role.
 ```
+
+**Grok Build** — uses `assemble-with-grok-team` skill (native `spawn_subagent` dispatching named `brooks-*` agents directly with their full task, worktree isolation for writers, shared `todo_write` via Ctrl+T):
+```
+Use the assemble-with-grok-team skill
+```
+
+(Note: this skill was originally built around an observed single-turn limit on custom named agents in Grok 0.2.43, forcing a `general-purpose` + `resume_from` workaround. Live smoke testing confirmed that limitation is resolved in Grok 1.0.3, and the skill now spawns named agents directly.)
 
 **Copilot CLI** — uses `assemble-with-fleet` skill (requires experimental fleet mode):
 ```
@@ -324,6 +394,10 @@ Dispatch the Language Lawyer agent to research this framework edge case.
 
 On Claude Code, Copilot CLI, and OpenCode, the Copilot agent is read-only (permissions deny `edit`, `bash`, and `webfetch`); the Tester agent can write files and run shell commands (permissions allow `edit` and `bash`); the Language Lawyer can search the web, fetch URLs, and run shell commands (permissions allow `bash`, `webfetch`, and `websearch`, deny `edit`). Codex agents use Codex sandbox and approval settings instead.
 
+**Grok Build** — custom agents live in `.grok/agents/` (`brooks-copilot`, `brooks-tester`, `brooks-language-lawyer`).
+
+Direct dispatch by name is supported and is what the `assemble-with-grok-team` skill now uses (`subagent_type: "brooks-copilot"` etc., worktree isolation for Tester) — a pattern enabled by live smoke testing confirming the single-turn limit observed on named `subagent_type` spawns in Grok 0.2.43 is resolved as of Grok 1.0.3. See `.grok/agents/README.md` and the skill for details. The named brooks-* definitions provide the detailed contracts and remain useful for discovery (catalog / Ctrl+Shift+A) and manual one-off use.
+
 ## Repository Structure
 
 ```
@@ -350,8 +424,12 @@ skills/                         Shared across all platforms (Agent Skills standa
   toolsmith/SKILL.md              Custom tool builder
   language-lawyer/SKILL.md        Language and framework edge cases
   program-clerk/SKILL.md          Code organization and structure
-  assemble-team/SKILL.md          Team briefing skill (all platforms)
-  assemble-with-fleet/SKILL.md    Parallel team spawn via Copilot CLI fleet mode or OpenCode task tool
+  assemble-team/SKILL.md            Team briefing skill (all platforms)
+  assemble-with-fleet/SKILL.md      Parallel team spawn via Copilot CLI fleet mode or OpenCode task tool
+  assemble-with-grok-team/SKILL.md  Parallel spawn via Grok native subagents + worktrees + shared todo_write
+
+.grok/                          Grok Build specific
+  agents/                       Native agent defs (brooks-copilot, brooks-tester, brooks-language-lawyer)
 
 .claude-plugin/                 Claude Code specific
   plugin.json                     Plugin manifest (name, version, author)
@@ -387,11 +465,13 @@ Platform-specific files provide deeper integration:
 | `.codex/config.toml` | OpenAI Codex | Optional subagent runtime limits such as `agents.max_concurrent_threads_per_session` |
 | `.codex/agents/` | OpenAI Codex | Per-role TOML agent configs with developer instructions |
 | `.claude-plugin/` | Claude Code & Copilot CLI | Plugin manifest (marketplace loading) |
-| `agents/` | Claude Code | Dispatch templates for subagent roles (Copilot, Tester) |
+| `.grok/agents/` | Grok Build | Native agent definitions (`brooks-copilot`, `brooks-tester`, `brooks-language-lawyer`) |
+| `agents/` | Claude Code | Dispatch templates for subagent roles (Copilot, Tester, Language Lawyer) |
 | `commands/` | Claude Code | Slash commands (`/assemble-team`, `/assemble-with-agent-teams`) |
 | `.github/agents/` | Copilot CLI | Custom agent definitions for `/agent` dispatch |
 | `.opencode/agents/` | OpenCode | Custom agent definitions for subagent dispatch |
-| `skills/assemble-team/` | All platforms (Claude Code, OpenAI Codex, Copilot CLI & OpenCode) | Team briefing skill |
+| `skills/assemble-team/` | All platforms (Claude Code, OpenAI Codex, Grok Build, Copilot CLI & OpenCode) | Team briefing skill |
+| `skills/assemble-with-grok-team/` | Grok Build | Parallel spawn via native `spawn_subagent`, worktrees, and shared `todo_write` |
 | `skills/assemble-with-fleet/` | Copilot CLI & OpenCode | Parallel spawn via fleet mode or task tool |
 
 > **Note:** Copilot CLI recognizes `.claude-plugin/` in addition to `.github/plugin/` when loading plugin manifests.
@@ -404,12 +484,12 @@ Full agent dispatch is supported through `.opencode/agents/`, which includes Cop
 
 If OpenCode updates its agent frontmatter format, check the [OpenCode agent specification](https://opencode.ai/docs/agents/) to verify these files remain current.
 
-> **Note for maintainers:** The core dispatch set (Copilot, Tester, Language Lawyer) is duplicated across four locations: `.codex/agents/` (Codex), `.opencode/agents/` (OpenCode), `agents/` (Claude Code), and `.github/agents/` (Copilot CLI). The four Codex-only specialists (Editor, Toolsmith, Program Clerk, Administrator) exist only in `.codex/agents/` and have no peer files on other platforms. This has already caused real drift (a permission-grant fix landed with three different wordings; a skill exclusion was added to two copies and missed a third). When changing a role's dispatch template, update every platform copy that role has and check that these stay equivalent:
+> **Note for maintainers:** The core dispatch set (Copilot, Tester, Language Lawyer) is duplicated across five locations: `.codex/agents/` (Codex), `.grok/agents/` (Grok Build), `.opencode/agents/` (OpenCode), `agents/` (Claude Code), and `.github/agents/` (Copilot CLI). The four Codex-only specialists (Editor, Toolsmith, Program Clerk, Administrator) exist only in `.codex/agents/` and have no peer files on other platforms. This has already caused real drift more than once (a permission-grant fix landed with three different wordings; a skill exclusion was added to some copies and missed others, most recently when Grok's guard blocks were missing the same exclusion that had already been backported to the other four). When changing a role's dispatch template, update every platform copy that role has and check that these stay equivalent:
 > - The protocol body (review steps, failure-mode checklist, output format)
-> - The skill-exclusion list (`SUBAGENT-STOP` / `[CODEX-STOP]`)
-> - The tool/permission grant, expressed in each platform's own format (Claude Code `tools`/`disallowedTools`, OpenCode `permission`, Copilot CLI `tools`, Codex `sandbox_mode`)
+> - The skill-exclusion list (`SUBAGENT-STOP` / `[CODEX-STOP]` / Grok's inline guard)
+> - The tool/permission grant, expressed in each platform's own format (Claude Code `tools`/`disallowedTools`, OpenCode `permission`, Copilot CLI `tools`, Codex `sandbox_mode`, Grok `tools:`)
 >
-> Now that a fourth platform is here, a single canonical source per role with generated or symlinked platform shims is worth serious consideration instead of continuing to hand-sync four copies.
+> With a fifth platform now in place, a single canonical source per role with generated or symlinked platform shims is worth serious consideration instead of continuing to hand-sync five copies.
 
 ### OpenAI Codex compatibility
 
