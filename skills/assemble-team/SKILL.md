@@ -94,5 +94,7 @@ End with:
 > **Want parallel support?**
 > - In Codex: explicitly ask me to spawn the relevant custom agents, then use `/agent`
 >   to inspect or steer their threads.
+> - In Grok Build: use the `assemble-with-grok-team` skill for native parallel subagents.
 > - In Copilot CLI or OpenCode: use the `assemble-with-fleet` skill to spawn independent
 >   sessions per role.
+> - In Claude Code: use `/assemble-with-agent-teams` for Agent Teams.

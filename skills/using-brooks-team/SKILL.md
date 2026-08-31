@@ -6,7 +6,7 @@ description: Use at the start of any substantial development session to orient t
 <SUBAGENT-STOP>
 If you were dispatched as a Copilot, Tester, Editor, Toolsmith, Language Lawyer, Program Clerk, or Administrator subagent,
 skip this skill. Your role instructions are in your agent prompt.
-(Administrator is inline-only on Claude Code, Copilot CLI, and OpenCode; on Codex it is a dispatchable custom agent via `.codex/agents/administrator.toml`.)
+(Administrator is inline-only on Claude Code, Copilot CLI, OpenCode, and Grok Build; on Codex it is a dispatchable custom agent via `.codex/agents/administrator.toml`.)
 </SUBAGENT-STOP>
 
 # Using the Brooks Surgical Team
@@ -23,9 +23,9 @@ This framework organizes AI-assisted software development around Fred Brooks' Su
 | Copilot | `copilot` | Before completing any significant feature | Yes (or inline review) |
 | Tester | `tester` | Any feature, bugfix, or quality concern | Yes (or inline) |
 | Administrator | `administrator` | Multi-task planning, tracking, prioritization | Yes (in Codex) / inline on other platforms |
-| Editor | `editor` | Docs, specs, READMEs, commit messages | Optional dispatch in Codex; optional teammate in Claude Agent Teams |
-| Program Clerk | `program-clerk` | File reorganization, naming, library structure | Optional dispatch in Codex; optional teammate in Claude Agent Teams |
-| Toolsmith | `toolsmith` | Repetitive tasks, missing automation, workflow pain | Optional dispatch in Codex; optional teammate in Claude Agent Teams |
+| Editor | `editor` | Docs, specs, READMEs, commit messages | Optional dispatch in Codex; optional teammate via grok-team or Claude Agent Teams |
+| Program Clerk | `program-clerk` | File reorganization, naming, library structure | Optional dispatch in Codex; optional teammate via grok-team or Claude Agent Teams |
+| Toolsmith | `toolsmith` | Repetitive tasks, missing automation, workflow pain | Optional dispatch in Codex; optional teammate via grok-team or Claude Agent Teams |
 | Language Lawyer | `language-lawyer` | Framework subtlety, edge case, version concern | Yes (or inline) |
 
 ## When to Dispatch vs. Inline Guidance

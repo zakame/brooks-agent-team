@@ -108,7 +108,7 @@ A delegation without explicit acceptance criteria is a recipe for rework.
 
 ## Integration with Tools
 
-The Administrator uses `TodoWrite` (or equivalent task tracking) to maintain live task state. The task list is the ground truth — not memory, not chat history.
+The Administrator uses the platform's task-tracking tool (`TodoWrite` on Claude Code, `todo_write` on Grok Build, or equivalent) to maintain live task state. The task list is the ground truth — not memory, not chat history.
 
 Every task gets:
 - A unique, descriptive identifier
