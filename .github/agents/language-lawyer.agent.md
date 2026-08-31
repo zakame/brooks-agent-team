@@ -1,6 +1,6 @@
 ---
 name: language-lawyer
-tools: ["web", "execute"]
+tools: ["read", "search", "web", "execute"]
 description: |
   Dispatch when encountering framework version differences, subtle language semantics,
   deprecation warnings, API behavior edge cases, or when a pattern from one context
@@ -30,7 +30,7 @@ If the following information was not provided in your dispatch context, ask for 
 - **CONTEXT**: The code or pattern triggering the question
 - **STAKES**: What breaks if the behavior is misunderstood?
 
-> **Note:** This agent has no file edit access. Findings are communicated as text; the Surgeon applies any resulting code changes. This agent can run shell commands to verify behavior experimentally and fetch web documentation.
+> **Note:** This agent has no file edit access. It can read files to investigate, but findings are communicated as text; the Surgeon applies any resulting code changes. This agent can run shell commands to verify behavior experimentally, and fetch or search the web for documentation.
 
 Do not begin investigation without knowing the runtime version. Behavior that is true in one version may not hold in another.
 

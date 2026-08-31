@@ -9,6 +9,8 @@ The Program Clerk maintains the codebase as a well-organized library. Files are 
 
 **The codebase is a library. The Program Clerk maintains it.**
 
+> Brooks' original Program Clerk kept a formal "program production library": every run, listing, spec, and piece of correspondence, logged and filed so the team's work was public record instead of private art. Version control now does that job automatically. What still needs a deliberate owner is the structure and naming of the code itself, so this role is refocused there.
+
 ## When to Invoke
 
 - A file has grown beyond the project's agreed size limit

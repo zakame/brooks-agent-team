@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Language Lawyer subagent (`agents/language-lawyer.md`, `.github/agents/language-lawyer.agent.md`) had no file read access on Claude Code and Copilot CLI, despite its protocol requiring it to read the code triggering the question
+- Copilot subagent had no enforced read-only restriction on Claude Code and Copilot CLI, despite the README documenting it as read-only; only the OpenCode copy actually denied edit access
+- `assemble-with-fleet` skill exclusion was missing from the Claude Code copies of the Copilot, Tester, and Language Lawyer dispatch templates (`agents/*.md`), present only in the OpenCode and Copilot CLI copies
+- Language Lawyer permission notes had drifted to three different wordings across `agents/`, `.opencode/agents/`, and `.github/agents/`
+
+### Changed
+
+- `skills/program-clerk/SKILL.md` now notes how this role relates to Brooks' original Program Clerk (a technical records archivist), and why it's refocused on code structure now that version control covers the records-keeping job
+- README Inspiration section now names conceptual integrity as Brooks' stated rationale for the surgical team structure, and documents why the two secretary roles are omitted
+- README's maintainer note on agent-file duplication is now a concrete checklist of what must stay in sync across platforms
+
 ## [1.1.1] - 2026-05-15
 
 ### Fixed

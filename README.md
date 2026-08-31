@@ -8,7 +8,7 @@ Instead of every team member working on all parts of a system, the Surgical Team
 
 This project draws from two sources:
 
-**Fred Brooks' Surgical Team** (Chapter 3, *The Mythical Man-Month*, 1975), originally conceived by Harlan Mills: a small, highly specialized team organized around a single chief programmer who writes all critical code, supported by a copilot, tester, toolsmith, editor, administrator, language lawyer, and program clerk — each with a distinct, non-overlapping responsibility.
+**Fred Brooks' Surgical Team** (Chapter 3, *The Mythical Man-Month*, 1975), originally conceived by Harlan Mills: a small, highly specialized team organized around a single chief programmer who writes all critical code, supported by a copilot, tester, toolsmith, editor, administrator, language lawyer, and program clerk — each with a distinct, non-overlapping responsibility. Brooks' case for this structure is conceptual integrity: a system designed by one mind (or a few, tightly coordinated) is more coherent than one designed by a large, egalitarian team, even if it takes longer to build. Brooks' original roster also includes two secretaries, one for the administrator and one for the editor. This plugin omits them since they existed to handle human clerical work (correspondence, filing, scheduling) that an AI agent doesn't need.
 
 **[Superpowers by Jesse Vincent](https://github.com/obra/superpowers)**: a Claude Code skills framework that demonstrated how composable, role-aware skills can guide an AI agent through disciplined software development workflows. The structure, conventions, and plugin format of this project follow Superpowers' design closely.
 
@@ -324,7 +324,12 @@ Full agent dispatch is supported through `.opencode/agents/`, which includes Cop
 
 If OpenCode updates its agent frontmatter format, check the [OpenCode agent specification](https://opencode.ai/docs/agents/) to verify these files remain current.
 
-> **Note for maintainers:** The agent body content is duplicated across three locations: `.opencode/agents/`, `agents/` (Claude Code), and `.github/agents/` (Copilot CLI). Any change to the review, test, or language research protocol must be applied in all three.
+> **Note for maintainers:** The agent body content is duplicated across three locations: `.opencode/agents/`, `agents/` (Claude Code), and `.github/agents/` (Copilot CLI). This has already caused real drift (a permission-grant fix landed with three different wordings; a skill exclusion was added to two copies and missed the third). When changing a role's dispatch template, update all three and check that these stay equivalent:
+> - The protocol body (review steps, failure-mode checklist, output format)
+> - The `SUBAGENT-STOP` skill-exclusion list
+> - The tool/permission grant, expressed in each platform's own format (Claude Code `tools`/`disallowedTools`, OpenCode `permission`, Copilot CLI `tools`)
+>
+> If a fourth platform's agent files are added, consider a single canonical source per role with generated or symlinked platform shims instead of continuing to hand-sync three (soon four) copies.
 
 ## Philosophy
 

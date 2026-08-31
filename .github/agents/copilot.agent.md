@@ -1,5 +1,6 @@
 ---
 name: copilot
+tools: ["read", "search"]
 description: |
   Dispatch when a significant feature or fix is complete and needs review against the
   original design intent before merging. The Copilot acts as the Surgeon's alter ego:
