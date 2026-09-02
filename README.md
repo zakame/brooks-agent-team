@@ -1,8 +1,18 @@
 # brooks-agent-team
 
-A skills plugin that organizes AI-assisted software development around Fred Brooks' **Surgical Team** model from *The Mythical Man-Month* (1975). Compatible with **OpenAI Codex**, **Grok Build**, **GitHub Copilot CLI**, **Claude Code**, and **OpenCode**.
+A skills plugin that organizes AI-assisted software development around Fred Brooks' **Surgical Team** model from *The Mythical Man-Month* (1975). Compatible with **Claude Code**, **GitHub Copilot CLI**, **OpenCode**, **OpenAI Codex**, and **Grok Build**.
 
 Instead of every team member working on all parts of a system, the Surgical Team concentrates critical work in one skilled "surgeon" (chief programmer), supported by specialized roles that keep the surgeon focused and productive. This plugin maps those roles to agent skills and dispatch templates.
+
+## Contents
+
+- [Inspiration](#inspiration)
+- [The Team](#the-team)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Repository Structure](#repository-structure)
+- [Philosophy](#philosophy)
+- [License](#license)
 
 ## Inspiration
 
@@ -31,45 +41,32 @@ The `SKILL.md` format used here conforms to the [Agent Skills open standard](htt
 
 ## Installation
 
-### OpenAI Codex
+### Claude Code
 
-Codex uses `AGENTS.md` for persistent repository guidance. This repository includes an `AGENTS.md` file plus a `.agents/skills/` mirror of the canonical `skills/` directory for repo-local Codex workflows.
+#### Via marketplace (recommended)
 
-Skills are discovered via `.agents/skills/` when Codex is launched inside this repository. To use these skills from other projects, install them into Codex's user-level skill path:
+Register the marketplace, then install the plugin:
+
+```
+/plugin marketplace add zakame/skills-marketplace
+/plugin install brooks-agent-team@zakame-skills-marketplace
+```
+
+Skills are available immediately. To update to a newer version, run `/plugin install brooks-agent-team@zakame-skills-marketplace`.
+
+#### Developer mode (alternate)
+
+To load skills directly from a local clone — useful when developing or testing changes to the skills themselves:
 
 ```bash
-# Global skills, available from any project
-mkdir -p ~/.agents/skills
-ln -sfn /path/to/brooks-agent-team/skills/* ~/.agents/skills/
+git clone https://github.com/zakame/brooks-agent-team /path/to/brooks-agent-team
+claude --plugin-dir /path/to/brooks-agent-team
 ```
 
-For project-local use, copy or symlink the skills into the target repository instead:
-
-```bash
-mkdir -p .agents/skills
-ln -sfn /path/to/brooks-agent-team/skills/* .agents/skills/
-```
-
-For native Codex subagents (enabling `/agent` switching in Codex CLI), this repository includes standalone TOML configs for the seven specialist roles (Copilot, Tester, Editor, Toolsmith, Language Lawyer, Program Clerk, Administrator) in `.codex/agents/`. The Surgeon is the default chief-programmer role in any Codex session and is not a dispatchable Codex agent. Install the specialist agents globally or project-locally:
-
-```bash
-# Global agents, available from any project
-mkdir -p ~/.codex/agents
-ln -sf /path/to/brooks-agent-team/.codex/agents/*.toml ~/.codex/agents/
-
-# Or project-local agents
-mkdir -p .codex/agents
-cp /path/to/brooks-agent-team/.codex/agents/*.toml .codex/agents/
-```
-
-The optional `.codex/config.toml` in this repository only sets subagent runtime limits such as `agents.max_concurrent_threads_per_session`; merge those settings into your own `.codex/config.toml` if you want them. Project-scoped `.codex/` configuration may require the project to be trusted before Codex loads it. See the [Codex configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference) for the full configuration schema.
-
-Invoke the skills directly in a Codex session:
+To reload after making changes without restarting:
 
 ```
-Use the assemble-team skill
-Use the surgeon skill to implement the feature.
-Use the copilot skill to review the completed diff.
+/reload-plugins
 ```
 
 ### GitHub Copilot CLI
@@ -148,32 +145,45 @@ For cross-project use, global agent discovery paths are not yet standardized in 
 
 See [Dispatch subagent roles](#dispatch-subagent-roles) for invocation examples.
 
-### Claude Code
+### OpenAI Codex
 
-#### Via marketplace (recommended)
+Codex uses `AGENTS.md` for persistent repository guidance. This repository includes an `AGENTS.md` file plus a `.agents/skills/` mirror of the canonical `skills/` directory for repo-local Codex workflows.
 
-Register the marketplace, then install the plugin:
-
-```
-/plugin marketplace add zakame/skills-marketplace
-/plugin install brooks-agent-team@zakame-skills-marketplace
-```
-
-Skills are available immediately. To update to a newer version, run `/plugin install brooks-agent-team@zakame-skills-marketplace`.
-
-#### Developer mode (alternate)
-
-To load skills directly from a local clone — useful when developing or testing changes to the skills themselves:
+Skills are discovered via `.agents/skills/` when Codex is launched inside this repository. To use these skills from other projects, install them into Codex's user-level skill path:
 
 ```bash
-git clone https://github.com/zakame/brooks-agent-team /path/to/brooks-agent-team
-claude --plugin-dir /path/to/brooks-agent-team
+# Global skills, available from any project
+mkdir -p ~/.agents/skills
+ln -sfn /path/to/brooks-agent-team/skills/* ~/.agents/skills/
 ```
 
-To reload after making changes without restarting:
+For project-local use, copy or symlink the skills into the target repository instead:
+
+```bash
+mkdir -p .agents/skills
+ln -sfn /path/to/brooks-agent-team/skills/* .agents/skills/
+```
+
+For native Codex subagents (enabling `/agent` switching in Codex CLI), this repository includes standalone TOML configs for the seven specialist roles (Copilot, Tester, Editor, Toolsmith, Language Lawyer, Program Clerk, Administrator) in `.codex/agents/`. The Surgeon is the default chief-programmer role in any Codex session and is not a dispatchable Codex agent. Install the specialist agents globally or project-locally:
+
+```bash
+# Global agents, available from any project
+mkdir -p ~/.codex/agents
+ln -sf /path/to/brooks-agent-team/.codex/agents/*.toml ~/.codex/agents/
+
+# Or project-local agents
+mkdir -p .codex/agents
+cp /path/to/brooks-agent-team/.codex/agents/*.toml .codex/agents/
+```
+
+The optional `.codex/config.toml` in this repository only sets subagent runtime limits such as `agents.max_concurrent_threads_per_session`; merge those settings into your own `.codex/config.toml` if you want them. Project-scoped `.codex/` configuration may require the project to be trusted before Codex loads it. See the [Codex configuration reference](https://learn.chatgpt.com/docs/config-file/config-reference) for the full configuration schema.
+
+Invoke the skills directly in a Codex session:
 
 ```
-/reload-plugins
+Use the assemble-team skill
+Use the surgeon skill to implement the feature.
+Use the copilot skill to review the completed diff.
 ```
 
 ### Grok Build
@@ -244,7 +254,7 @@ For the full worktree review/apply workflow, spawn templates for every role, and
 
 | Skill / Command | Tool | When to use |
 |---------|------|-------------|
-| `assemble-team` skill | All platforms (OpenAI Codex, Grok Build, Copilot CLI, Claude Code & OpenCode) | Single-session work — one AI instance plays all roles sequentially |
+| `assemble-team` skill | All platforms (Claude Code, Copilot CLI, OpenCode, OpenAI Codex & Grok Build) | Single-session work — one AI instance plays all roles sequentially |
 | `/assemble-team` command | Claude Code only | Same as above, as a slash command |
 | `assemble-with-grok-team` skill | Grok Build only | Parallel work — spawns one independent subagent per role using Grok's native `spawn_subagent` + worktrees + shared `todo_write` list |
 | `assemble-with-fleet` skill | Copilot CLI & OpenCode | Parallel work — spawns one independent session per role (Copilot CLI uses `/fleet`; OpenCode uses the task tool) |
@@ -254,7 +264,17 @@ For the full worktree review/apply workflow, spawn templates for every role, and
 
 Run at the start of any development session to get a project-contextual briefing on which roles apply and how to invoke them.
 
+**Claude Code:**
+```
+/assemble-team
+```
+
 **Copilot CLI:**
+```
+Use the assemble-team skill
+```
+
+**OpenCode:**
 ```
 Use the assemble-team skill
 ```
@@ -264,21 +284,36 @@ Use the assemble-team skill
 Use the assemble-team skill
 ```
 
-**Claude Code:**
-```
-/assemble-team
-```
-
-**OpenCode:**
-```
-Use the assemble-team skill
-```
-
 The AI surveys your project and presents a tailored overview of the team. Roles are invoked on demand as the work requires them. Lightweight and works without any additional setup.
 
 ### Parallel team spawn
 
 Spawn one independent AI session per role so that Copilot reviews, Tester writes tests, and Language Lawyer researches edge cases while you continue on the critical path.
+
+**Claude Code** — uses `/assemble-with-agent-teams` (requires [Claude Code Agent Teams](https://code.claude.com/docs/en/agent-teams.md)):
+
+Enable Agent Teams first:
+```json
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  }
+}
+```
+Then run:
+```
+/assemble-with-agent-teams
+```
+
+**Copilot CLI** — uses `assemble-with-fleet` skill (requires experimental fleet mode):
+```
+Use the assemble-with-fleet skill
+```
+
+**OpenCode** — uses `assemble-with-fleet` skill (spawns subagents via the task tool):
+```
+Use the assemble-with-fleet skill
+```
 
 **OpenAI Codex** — uses Codex multi-agent mode with standalone per-role agent configs in `.codex/agents/` or `~/.codex/agents/`. Multi-agent is stable and enabled by default in current Codex CLI releases. Each of the seven specialist roles (Copilot, Tester, Editor, Toolsmith, Language Lawyer, Program Clerk, Administrator) is defined by its matching TOML file.
 ```
@@ -296,51 +331,12 @@ Use the assemble-with-grok-team skill
 
 (Note: this skill was originally built around an observed single-turn limit on custom named agents in Grok 0.2.43, forcing a `general-purpose` + `resume_from` workaround. Live smoke testing confirmed that limitation is resolved in Grok 1.0.3, and the skill now spawns named agents directly.)
 
-**Copilot CLI** — uses `assemble-with-fleet` skill (requires experimental fleet mode):
-```
-Use the assemble-with-fleet skill
-```
-
-**OpenCode** — uses `assemble-with-fleet` skill (spawns subagents via the task tool):
-```
-Use the assemble-with-fleet skill
-```
-
-**Claude Code** — uses `/assemble-with-agent-teams` (requires [Claude Code Agent Teams](https://code.claude.com/docs/en/agent-teams.md)):
-
-Enable Agent Teams first:
-```json
-{
-  "env": {
-    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
-  }
-}
-```
-Then run:
-```
-/assemble-with-agent-teams
-```
-
 **What you get by platform:**
-- **Codex:** explicit parallel specialist subagents, consolidated summaries back to the main thread, and `/agent` for inspecting, steering, and switching between agent threads. Codex does not currently provide a Claude Agent Teams-style shared task list or direct teammate mailbox.
 - **Claude Agent Teams:** independent teammates coordinated by a lead, with a shared task list, dependency tracking, direct teammate messaging, and file ownership guidance.
 - **Copilot CLI / OpenCode:** fleet/task-tool style parallel workers following the shared task list included in their prompts or platform session state.
+- **Codex:** explicit parallel specialist subagents, consolidated summaries back to the main thread, and `/agent` for inspecting, steering, and switching between agent threads. Codex does not currently provide a Claude Agent Teams-style shared task list or direct teammate mailbox.
 
 ### Invoke skills directly
-
-**Copilot CLI** — use the skill name in your prompt:
-```
-Use the surgeon skill to start implementing this feature.
-Use the copilot skill to review my changes.
-Use the language-lawyer skill for this edge case.
-```
-
-**OpenAI Codex** — use the skill name directly in your prompt:
-```
-Use the surgeon skill to start implementing this feature.
-Use the copilot skill to review my changes.
-Use the language-lawyer skill for this edge case.
-```
 
 **Claude Code** — skills are namespaced under `brooks-agent-team:`:
 ```
@@ -354,7 +350,21 @@ brooks-agent-team:language-lawyer
 brooks-agent-team:program-clerk
 ```
 
+**Copilot CLI** — use the skill name in your prompt:
+```
+Use the surgeon skill to start implementing this feature.
+Use the copilot skill to review my changes.
+Use the language-lawyer skill for this edge case.
+```
+
 **OpenCode** — use the skill name directly in a session prompt:
+```
+Use the surgeon skill to start implementing this feature.
+Use the copilot skill to review my changes.
+Use the language-lawyer skill for this edge case.
+```
+
+**OpenAI Codex** — use the skill name directly in your prompt:
 ```
 Use the surgeon skill to start implementing this feature.
 Use the copilot skill to review my changes.
@@ -374,7 +384,7 @@ The AI reads each skill's `description` field and automatically invokes the rele
 
 The **Copilot**, **Tester**, and **Language Lawyer** roles can be dispatched as independent subagents, allowing the Surgeon to continue working on the critical path while review, test writing, or language/framework research happens in parallel.
 
-**OpenAI Codex** — all seven specialist roles are standalone TOML files in `.codex/agents/` for project use or `~/.codex/agents/` for global use; the Surgeon is the default orchestrator and has no agent file in `.codex/agents/` — it is not a dispatch target. Copilot, Administrator, and Program Clerk set `sandbox_mode = "read-only"`; the Language Lawyer inherits the parent session's sandbox and approval policy and has a `[CODEX-STOP]` instruction guard discouraging file edits (prompt-level convention, not a sandbox enforcement). Subagent dispatch is always explicit.
+**Claude Code** — use the dispatch templates in `agents/copilot.md`, `agents/tester.md`, and `agents/language-lawyer.md`.
 
 **Copilot CLI** — use the custom agents in `.github/agents/` (copy to `~/.copilot/agents/` for cross-project use):
 ```
@@ -382,8 +392,6 @@ Use the copilot agent to review the authentication changes.
 Use the tester agent to write tests for the payment module.
 Use the language-lawyer agent to research this API deprecation.
 ```
-
-**Claude Code** — use the dispatch templates in `agents/copilot.md`, `agents/tester.md`, and `agents/language-lawyer.md`.
 
 **OpenCode** — use the agent definitions in `.opencode/agents/`:
 ```
@@ -393,6 +401,8 @@ Dispatch the Language Lawyer agent to research this framework edge case.
 ```
 
 On Claude Code, Copilot CLI, and OpenCode, the Copilot agent is read-only (permissions deny `edit`, `bash`, and `webfetch`); the Tester agent can write files and run shell commands (permissions allow `edit` and `bash`); the Language Lawyer can search the web, fetch URLs, and run shell commands (permissions allow `bash`, `webfetch`, and `websearch`, deny `edit`). Codex agents use Codex sandbox and approval settings instead.
+
+**OpenAI Codex** — all seven specialist roles are standalone TOML files in `.codex/agents/` for project use or `~/.codex/agents/` for global use; the Surgeon is the default orchestrator and has no agent file in `.codex/agents/` — it is not a dispatch target. Copilot, Administrator, and Program Clerk set `sandbox_mode = "read-only"`; the Language Lawyer inherits the parent session's sandbox and approval policy and has a `[CODEX-STOP]` instruction guard discouraging file edits (prompt-level convention, not a sandbox enforcement). Subagent dispatch is always explicit.
 
 **Grok Build** — custom agents live in `.grok/agents/` (`brooks-copilot`, `brooks-tester`, `brooks-language-lawyer`).
 
