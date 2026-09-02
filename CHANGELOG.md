@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-09-03
+
 ### Added
 
 - OpenAI Codex compatibility: `.codex/agents/*.toml` custom agents for all seven specialist roles, `.codex/config.toml` subagent runtime settings, `AGENTS.md` for Codex repository guidance, and a `.agents/skills/` symlink mirror for Codex skill discovery
@@ -48,6 +50,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`capability_mode` is not a `spawn_subagent` parameter (corrected 2026-09-01).** Earlier rounds of this integration passed `capability_mode` (`read-only`/`read-write`/`execute`/`all`) on every spawn call and found, via live testing, that its Execute axis was enforced but its Write axis was not. Rechecking against current Grok documentation found the deeper issue: `capability_mode` was never a real `spawn_subagent` argument at all. The current docs list the real parameters as `prompt`, `description`, `subagent_type`, `background`, `isolation`, and `resume_from`. All `capability_mode` spawn-JSON keys and related prose were removed; the confirmed working restriction remains frontmatter `tools:` (real hard write-block for Copilot, partial for Language Lawyer since its required Bash access reopens `search_replace` as a side effect), and no restriction for Tester (intentional, matching every other platform).
 - **Added `tools:` frontmatter to close the real gap (2026-08-14), confirmed working via live testing:** `brooks-copilot.md` now restricts to `read_file, list_dir, search_tool, use_tool` — verified both the `write` and `search_replace` tools are genuinely unavailable, giving Copilot the first actually-enforced (not just prompt-level) read-only boundary among the Brooks roles. `brooks-language-lawyer.md` adds `web_search, run_terminal_command` to the same base set for its documented Bash-experiment allowance — but testing found `run_terminal_command`'s presence also unlocks `search_replace` as a side effect, so this role's write boundary remains prompt-contract-only, same as before this fix; closing it fully would require dropping Bash access, a tradeoff not made here.
 - `administrator` skill task-tracking wording made platform-neutral (`TodoWrite` on Claude Code, `todo_write` on Grok Build).
+- README's platform enumerations (intro sentence, Installation subsection order, Usage examples) now lead with Claude Code, then GitHub Copilot CLI, then OpenCode, OpenAI Codex, and Grok Build, reflecting Claude Code's first-class native support; added a `## Contents` section for easier navigation of the now 500+ line document.
 
 ## [1.1.1] - 2026-05-15
 
@@ -118,6 +121,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Surgeon skill `description` frontmatter value quoted to prevent YAML parsing issues
 
-[Unreleased]: https://github.com/zakame/brooks-agent-team/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/zakame/brooks-agent-team/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/zakame/brooks-agent-team/compare/v1.1.1...v1.2.0
+[1.1.1]: https://github.com/zakame/brooks-agent-team/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/zakame/brooks-agent-team/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/zakame/brooks-agent-team/releases/tag/v1.0.0
