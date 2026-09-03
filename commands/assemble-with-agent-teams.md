@@ -27,11 +27,13 @@ If it is NOT enabled, stop and tell the user:
 > the single-session surgical team instead.
 
 Also check whether the shared task list will actually be available. As of Claude Code
-v2.1.233, the Task tools (`TodoWrite`, `TaskCreate`, `TaskGet`, `TaskUpdate`, `TaskList`)
-are off by default on current-generation models (Sonnet 5, Opus 4.8, Fable 5, Mythos 5,
-and later) — without them, teammates fall back to coordinating through `SendMessage`
-only, which breaks the "Initial shared task list" workflow in Step 4. If the Surgeon is
-on one of those model families, tell them to also add:
+v2.1.233, `TaskCreate`/`TaskGet`/`TaskUpdate`/`TaskList` — the tools that back the
+shared team task list — are off by default on current-generation models (Sonnet 5,
+Opus 4.8, Fable 5, Mythos 5, and later), alongside the single-session `TodoWrite`
+checklist which is gated by the same flag but is not itself part of team coordination.
+Without the Task tools, teammates fall back to coordinating through `SendMessage` only,
+which breaks the "Initial shared task list" workflow in Step 4. If the Surgeon is on
+one of those model families, tell them to also add:
 
 > ```json
 > {

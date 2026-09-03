@@ -110,6 +110,8 @@ A delegation without explicit acceptance criteria is a recipe for rework.
 
 The Administrator uses the platform's task-tracking tool (`TodoWrite` on Claude Code, `todo_write` on Grok Build, or equivalent) to maintain live task state. The task list is the ground truth — not memory, not chat history.
 
+On Claude Code, `TodoWrite` is off by default as of CLI v2.1.233 for current-generation models (Sonnet 5, Opus 4.8, Fable 5, Mythos 5, and later) — set `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` to restore it. See the [Agent Teams setup section](../../README.md#claude-code) for details.
+
 Every task gets:
 - A unique, descriptive identifier
 - A current state
