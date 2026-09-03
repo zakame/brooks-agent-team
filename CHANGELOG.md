@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-09-03
+
 ### Fixed
 
-- `/assemble-with-agent-teams`, README, and `administrator` skill: documented that Claude Code's Agent Teams shared task list (`TaskCreate`/`TaskGet`/`TaskUpdate`/`TaskList`) is off by default for current-generation models (Sonnet 5, Opus 4.8, Fable 5, Mythos 5+) as of Claude Code v2.1.233, requiring `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` to restore it — otherwise teammates silently fall back to message-only coordination. The single-session `TodoWrite` checklist is gated by the same flag but confirmed live (via a spawned teammate) to not itself be part of team coordination. Also corrected the documented direct-message shortcut from "Shift+Down" to the actual Up/Down arrow keys + Enter, per current Claude Code docs. Verified against Claude Code CLI v2.1.258 and `code.claude.com/docs/en/agent-teams` / `tools-reference`, and live-tested end to end via this repo's own Agent Teams review pass on PR #9.
+- `/assemble-with-agent-teams`, README, and `administrator` skill: documented that Claude Code's Agent Teams shared task list (`TaskCreate`/`TaskGet`/`TaskUpdate`/`TaskList`) is off by default for current-generation models (Sonnet 5, Opus 4.8, Fable 5, Mythos 5+) as of Claude Code v2.1.233, requiring `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` to restore it — otherwise teammates silently fall back to message-only coordination. The single-session `TodoWrite` checklist is gated by the same flag but confirmed live (via a spawned teammate) to not itself be part of team coordination. Also corrected the documented direct-message shortcut from "Shift+Down" to the actual Up/Down arrow keys + Enter, per current Claude Code docs. Verified against Claude Code CLI v2.1.258 and `code.claude.com/docs/en/agent-teams` / `tools-reference`, and live-tested end to end via this repo's own Agent Teams review pass.
 
 ## [1.2.0] - 2026-09-03
 
@@ -125,7 +127,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Surgeon skill `description` frontmatter value quoted to prevent YAML parsing issues
 
-[Unreleased]: https://github.com/zakame/brooks-agent-team/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/zakame/brooks-agent-team/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/zakame/brooks-agent-team/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/zakame/brooks-agent-team/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/zakame/brooks-agent-team/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/zakame/brooks-agent-team/compare/v1.0.0...v1.1.0
