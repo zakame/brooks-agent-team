@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `/assemble-with-agent-teams` and README: documented that Claude Code's Agent Teams shared task list (`TodoWrite`/`TaskCreate`/`TaskGet`/`TaskUpdate`/`TaskList`) is off by default for current-generation models (Sonnet 5, Opus 4.8, Fable 5, Mythos 5+) as of Claude Code v2.1.233, requiring `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` to restore it — otherwise teammates silently fall back to message-only coordination. Also corrected the documented direct-message shortcut from "Shift+Down" to the actual Up/Down arrow keys + Enter, per current Claude Code docs. Verified against Claude Code CLI v2.1.258 and `code.claude.com/docs/en/agent-teams` / `tools-reference`.
+
 ## [1.2.0] - 2026-09-03
 
 ### Added

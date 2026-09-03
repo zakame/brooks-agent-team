@@ -26,6 +26,22 @@ If it is NOT enabled, stop and tell the user:
 > Then re-run `/assemble-with-agent-teams`. Alternatively, run `/assemble-team` to use
 > the single-session surgical team instead.
 
+Also check whether the shared task list will actually be available. As of Claude Code
+v2.1.233, the Task tools (`TodoWrite`, `TaskCreate`, `TaskGet`, `TaskUpdate`, `TaskList`)
+are off by default on current-generation models (Sonnet 5, Opus 4.8, Fable 5, Mythos 5,
+and later) — without them, teammates fall back to coordinating through `SendMessage`
+only, which breaks the "Initial shared task list" workflow in Step 4. If the Surgeon is
+on one of those model families, tell them to also add:
+
+> ```json
+> {
+>   "env": {
+>     "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+>     "CLAUDE_CODE_ENABLE_TODO_TOOLS": "1"
+>   }
+> }
+> ```
+
 ## Step 2: Quick Project Survey
 
 Read just enough to know what work is ahead:
@@ -139,7 +155,9 @@ After spawning, tell the user:
 > will handle review, testing, and support in parallel.
 >
 > A few reminders:
-> - Use **Shift+Down** to message a teammate directly
+> - Use the **Up/Down arrow keys** in the agent panel to select a teammate, then
+>   **Enter** to open its transcript and message it directly (**Ctrl+T** toggles the
+>   task list)
 > - Two teammates must not edit the same file — follow the ownership assignments above
 > - Run `/assemble-team` at any time for a full role reference
 > - When the work is done, shut down teammates and clean up team resources
