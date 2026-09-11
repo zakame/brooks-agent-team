@@ -1,6 +1,6 @@
 # brooks-agent-team
 
-A skills plugin that organizes AI-assisted software development around Fred Brooks' **Surgical Team** model from *The Mythical Man-Month* (1975). Compatible with **Claude Code**, **GitHub Copilot CLI**, **OpenCode**, **OpenAI Codex**, and **Grok Build**.
+A skills plugin that organizes AI-assisted software development around Fred Brooks' **Surgical Team** model from *The Mythical Man-Month* (1975). Compatible with **Claude Code**, **GitHub Copilot CLI**, **OpenCode**, **OpenAI Codex**, **Grok Build**, and **Hermes Agent**.
 
 Instead of every team member working on all parts of a system, the Surgical Team concentrates critical work in one skilled "surgeon" (chief programmer), supported by specialized roles that keep the surgeon focused and productive. This plugin maps those roles to agent skills and dispatch templates.
 
@@ -22,7 +22,7 @@ This project draws from two sources:
 
 **[Superpowers by Jesse Vincent](https://github.com/obra/superpowers)**: a Claude Code skills framework that demonstrated how composable, role-aware skills can guide an AI agent through disciplined software development workflows. The structure, conventions, and plugin format of this project follow Superpowers' design closely.
 
-The `SKILL.md` format used here conforms to the [Agent Skills open standard](https://github.com/agentskills/agentskills), which is supported by GitHub Copilot CLI, Claude Code, OpenCode, and OpenAI Codex (via the `.agents/skills/` mirror described below).
+The `SKILL.md` format used here conforms to the [Agent Skills open standard](https://github.com/agentskills/agentskills), which is supported by GitHub Copilot CLI, Claude Code, OpenCode, OpenAI Codex (via the `.agents/skills/` mirror described below), and [Hermes Agent](https://github.com/NousResearch/hermes-agent) (native, once the project-local skill directory is trusted — see the [Hermes Agent section](#hermes-agent) below).
 
 ## The Team
 
@@ -248,17 +248,69 @@ The `assemble-with-grok-team` skill spawns each teammate directly with its full 
 
 For the full worktree review/apply workflow, spawn templates for every role, and safety rules, see `skills/assemble-with-grok-team/SKILL.md`.
 
+### Hermes Agent
+
+[Hermes Agent](https://github.com/NousResearch/hermes-agent) natively supports the Agent Skills standard, so no platform adapter is needed for skills to work — this is the one platform in this repo with zero dispatch-file directory (no `.hermes/agents/` exists, because Hermes has no on-disk format to put in one).
+
+#### Skills
+
+**Permanent, available in every project (recommended):** clone this repository once, then register its `skills/` directory as an external skill directory in `~/.hermes/config.yaml`:
+
+```bash
+git clone https://github.com/zakame/brooks-agent-team /path/to/brooks-agent-team
+```
+
+```yaml
+skills:
+  external_dirs:
+    - /path/to/brooks-agent-team/skills
+```
+
+`external_dirs` supports `~` and `${VAR}` expansion, and — unlike project-local skill directories — needs **no trust step**: it's picked up immediately, in any project. If a skill of the same name also exists in a project-local directory, the local one wins.
+
+**Project-local (per clone, current repo only):** if you'd rather not touch global config, trust this repo's own `.agents/skills/` mirror instead:
+
+```bash
+cd /path/to/brooks-agent-team
+hermes skills trust .
+```
+
+Hermes discovers skills from `.agents/skills/` (already present in this repo, mirroring `skills/`) the same way Codex does. This only makes the skills available while working inside this repo — for other projects, either use the `external_dirs` option above, or copy/symlink the skill directories into that project's own `.agents/skills/` (or `.hermes/skills/`) and trust that path too.
+
+#### Subagent dispatch
+
+Hermes has no named, persistent agent-definition file format — nothing plays the role of `.codex/agents/*.toml` or `.grok/agents/*.md`. Its dispatch primitive, `delegate_task`, is fully ephemeral: `goal`, `context`, and `role` (`"leaf"` or `"orchestrator"`) are supplied at call time, with the invoked skill's own body pasted into `context` as the role contract. Hermes "profiles" do give a role a persistent identity, but each is a full separate Hermes installation (own config, memory, skills) — too heavy to ship as a lightweight per-role file in this repo.
+
+Invoke the skills directly in a Hermes session:
+
+```
+Use the assemble-team skill
+Use the surgeon skill to implement the feature.
+Use the copilot skill to review the completed diff.
+```
+
+For parallel work, use `assemble-with-hermes-team`, which spawns each role via `delegate_task` and, if your profile has the `kanban` toolset enabled, tracks the plan on Hermes' native kanban board instead of an in-memory list (see "Kanban as the shared task list" below):
+
+```
+Use the assemble-with-hermes-team skill
+```
+
+#### Kanban as the shared task list
+
+Hermes ships a kanban tool (`kanban_create`/`kanban_list`/`kanban_link`/`kanban_unblock`, plus dispatcher-only worker tools like `kanban_complete`/`kanban_comment`/`kanban_block`) backed by SQLite and shared across every Hermes profile/session on the machine — genuinely more capable than Claude Code's `TaskCreate`/`TaskList`/`TaskUpdate`/`TaskGet` in some respects (durable storage, dependency-aware auto-promotion between states, a review state, comment threads, and a live dashboard). Neither set of tools is available by default: "a regular `hermes chat` session has zero `kanban_*` tools in its schema unless the active profile explicitly enables the `kanban` toolset for orchestrator work" (per Hermes' own docs), and the worker tools are separately gated behind a task the kanban dispatcher itself spawned (a dedicated Hermes profile per role, a heavier one-time setup). `assemble-with-hermes-team`'s default flow uses the four orchestrator-side tools only if your profile already has that toolset enabled, and even then just to track the plan and dependencies, not to close cards out — the `delegate_task` result is the real completion signal. Without the toolset enabled at all, there's no fallback task-list tool either. See `skills/assemble-with-hermes-team/SKILL.md` for the full workflow, including the fully-autonomous profile-based option for teams run often enough to justify it.
+
 ## Usage
 
 ### Two ways to start
 
 | Skill / Command | Tool | When to use |
 |---------|------|-------------|
-| `assemble-team` skill | All platforms (Claude Code, Copilot CLI, OpenCode, OpenAI Codex & Grok Build) | Single-session work — one AI instance plays all roles sequentially |
+| `assemble-team` skill | All platforms (Claude Code, Copilot CLI, OpenCode, OpenAI Codex, Grok Build & Hermes Agent) | Single-session work — one AI instance plays all roles sequentially |
 | `/assemble-team` command | Claude Code only | Same as above, as a slash command |
 | `assemble-with-grok-team` skill | Grok Build only | Parallel work — spawns one independent subagent per role using Grok's native `spawn_subagent` + worktrees + shared `todo_write` list |
 | `assemble-with-fleet` skill | Copilot CLI & OpenCode | Parallel work — spawns one independent session per role (Copilot CLI uses `/fleet`; OpenCode uses the task tool) |
 | `/assemble-with-agent-teams` command | Claude Code only | Parallel work — spawns via Claude Code Agent Teams |
+| `assemble-with-hermes-team` skill | Hermes Agent only | Parallel work — spawns each role via `delegate_task`, tracked on Hermes' native kanban board if your profile has the `kanban` toolset enabled |
 
 ### `assemble-team` — single-session briefing
 
@@ -280,6 +332,11 @@ Use the assemble-team skill
 ```
 
 **OpenAI Codex:**
+```
+Use the assemble-team skill
+```
+
+**Hermes Agent:**
 ```
 Use the assemble-team skill
 ```
@@ -335,10 +392,16 @@ Use the assemble-with-grok-team skill
 
 (Note: this skill was originally built around an observed single-turn limit on custom named agents in Grok 0.2.43, forcing a `general-purpose` + `resume_from` workaround. Live smoke testing confirmed that limitation is resolved in Grok 1.0.3, and the skill now spawns named agents directly.)
 
+**Hermes Agent** — uses `assemble-with-hermes-team` skill (spawns each role via `delegate_task`; tracked on Hermes' native kanban board if the `kanban` toolset is enabled, otherwise a plain plan like on Codex/OpenCode):
+```
+Use the assemble-with-hermes-team skill
+```
+
 **What you get by platform:**
 - **Claude Agent Teams:** independent teammates coordinated by a lead, with a shared task list, dependency tracking, direct teammate messaging, and file ownership guidance. The shared task list requires `TaskCreate`/`TaskGet`/`TaskUpdate`/`TaskList` (the single-session `TodoWrite` checklist is gated by the same flag but isn't itself part of team coordination); those are on by default only on older models like Opus 4.7 — Sonnet 5, Opus 4.8, Fable 5, Mythos 5, and later need `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` (see above), or teammates silently coordinate via messages only.
 - **Copilot CLI / OpenCode:** fleet/task-tool style parallel workers following the shared task list included in their prompts or platform session state.
 - **Codex:** explicit parallel specialist subagents, consolidated summaries back to the main thread, and `/agent` for inspecting, steering, and switching between agent threads. Codex does not currently provide a Claude Agent Teams-style shared task list or direct teammate mailbox.
+- **Hermes Agent:** ephemeral `delegate_task` children (no persistent per-role agent file exists), optionally tracked on Hermes' own kanban board — durable SQLite storage, dependency-aware states, and a review state — but the board's tools aren't available by default either (the current profile must explicitly enable the `kanban` toolset), and even then the dispatcher-only worker tools (`kanban_complete`, `kanban_comment`, `kanban_block`, etc.) needed to close cards out autonomously require a dedicated Hermes profile per role; by default the plan lives in what you tell each `delegate_task` child, and its result is the real completion signal.
 
 ### Invoke skills directly
 
@@ -369,6 +432,13 @@ Use the language-lawyer skill for this edge case.
 ```
 
 **OpenAI Codex** — use the skill name directly in your prompt:
+```
+Use the surgeon skill to start implementing this feature.
+Use the copilot skill to review my changes.
+Use the language-lawyer skill for this edge case.
+```
+
+**Hermes Agent** — use the skill name directly in your prompt (once trusted, see [Hermes Agent](#hermes-agent) above):
 ```
 Use the surgeon skill to start implementing this feature.
 Use the copilot skill to review my changes.
@@ -412,6 +482,12 @@ On Claude Code, Copilot CLI, and OpenCode, the Copilot agent is read-only (permi
 
 Direct dispatch by name is supported and is what the `assemble-with-grok-team` skill now uses (`subagent_type: "brooks-copilot"` etc., worktree isolation for Tester) — a pattern enabled by live smoke testing confirming the single-turn limit observed on named `subagent_type` spawns in Grok 0.2.43 is resolved as of Grok 1.0.3. See `.grok/agents/README.md` and the skill for details. The named brooks-* definitions provide the detailed contracts and remain useful for discovery (catalog / Ctrl+Shift+A) and manual one-off use.
 
+**Hermes Agent** — there is no named agent file to dispatch by, since Hermes has no on-disk per-role agent-definition format. Use `delegate_task` directly, with the relevant skill's body pasted in as `context`:
+```
+delegate_task(goal: "Review this diff against its design intent.", context: "<skills/copilot/SKILL.md body> ...", role: "leaf")
+```
+`assemble-with-hermes-team` does this for every selected role, tracking the plan on the kanban board when available; see that skill for the full pattern.
+
 ## Repository Structure
 
 ```
@@ -441,6 +517,7 @@ skills/                         Shared across all platforms (Agent Skills standa
   assemble-team/SKILL.md            Team briefing skill (all platforms)
   assemble-with-fleet/SKILL.md      Parallel team spawn via Copilot CLI fleet mode or OpenCode task tool
   assemble-with-grok-team/SKILL.md  Parallel spawn via Grok native subagents + worktrees + shared todo_write
+  assemble-with-hermes-team/SKILL.md  Parallel spawn via Hermes delegate_task + native kanban board
 
 .grok/                          Grok Build specific
   agents/                       Native agent defs (brooks-copilot, brooks-tester, brooks-language-lawyer)
@@ -468,7 +545,7 @@ commands/                       Claude Code slash commands
 
 ### What lives where
 
-The `skills/` directory is the core of the plugin. Each subdirectory contains a `SKILL.md` file conforming to the [Agent Skills open standard](https://github.com/agentskills/agentskills), which is supported by GitHub Copilot CLI, Claude Code, OpenCode, and OpenAI Codex (via the `.agents/skills/` mirror). These files work on any platform that reads the standard.
+The `skills/` directory is the core of the plugin. Each subdirectory contains a `SKILL.md` file conforming to the [Agent Skills open standard](https://github.com/agentskills/agentskills), which is supported by GitHub Copilot CLI, Claude Code, OpenCode, OpenAI Codex (via the `.agents/skills/` mirror), and Hermes Agent (natively, via that same mirror or `skills.external_dirs`). These files work on any platform that reads the standard.
 
 Platform-specific files provide deeper integration:
 
@@ -484,9 +561,10 @@ Platform-specific files provide deeper integration:
 | `commands/` | Claude Code | Slash commands (`/assemble-team`, `/assemble-with-agent-teams`) |
 | `.github/agents/` | Copilot CLI | Custom agent definitions for `/agent` dispatch |
 | `.opencode/agents/` | OpenCode | Custom agent definitions for subagent dispatch |
-| `skills/assemble-team/` | All platforms (Claude Code, OpenAI Codex, Grok Build, Copilot CLI & OpenCode) | Team briefing skill |
+| `skills/assemble-team/` | All platforms (Claude Code, OpenAI Codex, Grok Build, Copilot CLI, OpenCode & Hermes Agent) | Team briefing skill |
 | `skills/assemble-with-grok-team/` | Grok Build | Parallel spawn via native `spawn_subagent`, worktrees, and shared `todo_write` |
 | `skills/assemble-with-fleet/` | Copilot CLI & OpenCode | Parallel spawn via fleet mode or task tool |
+| `skills/assemble-with-hermes-team/` | Hermes Agent | Parallel spawn via `delegate_task` and the native kanban board |
 
 > **Note:** Copilot CLI recognizes `.claude-plugin/` in addition to `.github/plugin/` when loading plugin manifests.
 
@@ -504,6 +582,8 @@ If OpenCode updates its agent frontmatter format, check the [OpenCode agent spec
 > - The tool/permission grant, expressed in each platform's own format (Claude Code `tools`/`disallowedTools`, OpenCode `permission`, Copilot CLI `tools`, Codex `sandbox_mode`, Grok `tools:`)
 >
 > With a fifth platform now in place, a single canonical source per role with generated or symlinked platform shims is worth serious consideration instead of continuing to hand-sync five copies.
+>
+> Hermes Agent does not add a sixth copy: it has no on-disk per-role agent-definition format at all, so there is no `.hermes/agents/`-style directory to keep in sync. Its dispatch is ephemeral (`delegate_task` with a skill body pasted in as context) — see the [Hermes Agent](#hermes-agent) section above.
 
 ### OpenAI Codex compatibility
 
@@ -522,6 +602,18 @@ The single-session workflow (`assemble-team`) is portable to Codex without modif
 Codex discovers `AGENTS.md` files by walking from the git root to the current working directory and concatenating them root-to-cwd (files closer to cwd appear later and win on conflicts). A global `~/.codex/AGENTS.override.md` suppresses `~/.codex/AGENTS.md`; at each project directory, `AGENTS.override.md` suppresses `AGENTS.md`, and `AGENTS.md` is used when neither override is present. The combined size of all included instruction files is capped at 32 KiB (`project_doc_max_bytes`); Codex stops including further files once that cap is reached.
 
 If Codex updates its agent TOML schema or `AGENTS.md` conventions, check the [Codex subagent documentation](https://learn.chatgpt.com/docs/agent-configuration/subagents) to verify these files remain current.
+
+### Hermes Agent compatibility
+
+[Hermes Agent](https://github.com/NousResearch/hermes-agent) natively supports the [Agent Skills open standard](https://github.com/agentskills/agentskills): its `name`/`description` frontmatter requirement matches the standard exactly, and it adds optional fields (`version`, `platforms`, `metadata.hermes.*`, `required_environment_variables`, `requires_toolsets`) that are additive, not a departure from it. This repository's `.agents/skills/` mirror is one of Hermes' recognized project-local skill directories (the other being `.hermes/skills/`) — no new directory or file format is needed for skills to load. The one thing this repo can't do on a user's behalf: project-local skill directories are trust-on-first-use, so `hermes skills trust <repo-path>` must be run once per clone before Hermes will load them. For a permanent, cross-project setup instead, add this repo's `skills/` path to `skills.external_dirs` in `~/.hermes/config.yaml` (supports `~`/`${VAR}` expansion) — external directories need no trust step at all, though a project-local skill of the same name still takes precedence over one from `external_dirs`. See the [Hermes Agent](#hermes-agent) installation section above for both options.
+
+Hermes has no persistent per-role agent-definition file — no directory in this repo plays the role of `.codex/agents/*.toml`, `.opencode/agents/*.md`, or `.grok/agents/*.md`. Its subagent primitive, `delegate_task`, takes `goal`/`context`/`output_schema`/`role` (`"leaf"` or `"orchestrator"`) at call time only; there's no on-disk registry to ship. Hermes "profiles" are a persistent identity mechanism, but each is a full separate Hermes home directory (own config, memory, skills, state db) — too heavy to autogenerate one per specialist role. `skills/assemble-with-hermes-team/SKILL.md` works around this by pasting the target role's skill body directly into `delegate_task`'s `context`.
+
+**Kanban as the shared task list.** Hermes ships a native kanban board backed by SQLite and shared across every Hermes profile/session on the machine — durable, dependency-aware (`triage → todo → ready → running → blocked → review → done → archived`, with parent→child links auto-promoting `todo` to `ready`), and arguably more capable than Claude Code's `TaskCreate`/`TaskList`/`TaskUpdate`/`TaskGet` in some respects (a dedicated review state, comment threads, a live dashboard). It is **not** zero-setup, at either level: per Hermes' own docs, "a regular `hermes chat` session has zero `kanban_*` tools in its schema unless the active profile explicitly enables the `kanban` toolset for orchestrator work" — that covers `kanban_create`/`kanban_list`/`kanban_link`/`kanban_unblock` too, not just the worker-lifecycle tools that actually close a card out (`kanban_show`, `kanban_complete`, `kanban_block`, `kanban_request_review`, `kanban_comment`), which are separately gated behind `HERMES_KANBAN_TASK` and only injected into tasks the kanban dispatcher itself spawns (a dedicated Hermes profile per role — a heavier setup this repo doesn't provision automatically). `assemble-with-hermes-team`'s default flow uses the board only when the current profile already has the orchestrator-side toolset enabled, and even then only for plan-of-record and dependency tracking — each `delegate_task` result is the actual completion signal, since nothing in the default flow can close a card out. Without that toolset, there's no fallback task-list tool either (same as Codex or OpenCode). The fully-autonomous, profile-based path that closes cards out through the kanban tools themselves is documented in that skill as an optional upgrade.
+
+Hermes reads `AGENTS.md` with its own hierarchical precedence (repo-wide, then package-level, then most-specific-in-cwd, discovered lazily as the agent reads into subdirectories) and supports `AGENTS.override.md` next to any `AGENTS.md`, the same override concept Codex uses. `delegate_task` children inherit the parent session's already-resolved project-context chain.
+
+If Hermes Agent updates its skills/delegation/kanban tooling, check its [documentation](https://github.com/NousResearch/hermes-agent) (`website/docs/user-guide/features/`) to verify these claims remain current.
 
 ## Philosophy
 

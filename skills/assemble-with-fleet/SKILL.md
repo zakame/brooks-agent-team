@@ -6,7 +6,7 @@ description: "Copilot CLI fleet mode or OpenCode task tool — Spawn a Brooks Su
 # Assemble Team with Fleet Mode
 
 <SUBAGENT-STOP>
-You are already operating as a dispatched subagent. Do not invoke `assemble-with-fleet`, `assemble-with-grok-team`, `using-brooks-team`, or `surgeon` skills. Invoking an assembly skill from inside a subagent would spawn additional subagents recursively.
+You are already operating as a dispatched subagent. Do not invoke `assemble-with-fleet`, `assemble-with-grok-team`, `assemble-with-hermes-team`, `using-brooks-team`, or `surgeon` skills. Invoking an assembly skill from inside a subagent would spawn additional subagents recursively.
 </SUBAGENT-STOP>
 
 <CODEX-STOP>

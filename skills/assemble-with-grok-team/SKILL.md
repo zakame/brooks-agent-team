@@ -6,7 +6,7 @@ description: "Grok-native surgical team — Spawn a Brooks Surgical Team using p
 # Assemble Grok Surgical Team (Parallel)
 
 <SUBAGENT-STOP>
-You are already operating as a dispatched subagent (Copilot, Tester, Language Lawyer, etc.). Do not invoke `assemble-with-grok-team`, `assemble-with-fleet`, `using-brooks-team`, or `surgeon` skills. Spawning further teammates from inside a subagent creates uncontrolled recursion.
+You are already operating as a dispatched subagent (Copilot, Tester, Language Lawyer, etc.). Do not invoke `assemble-with-grok-team`, `assemble-with-fleet`, `assemble-with-hermes-team`, `using-brooks-team`, or `surgeon` skills. Spawning further teammates from inside a subagent creates uncontrolled recursion.
 </SUBAGENT-STOP>
 
 When invoked, execute the following steps in order.
