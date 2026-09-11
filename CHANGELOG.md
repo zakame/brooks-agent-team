@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Hermes Agent support**: this repo's `.agents/skills/` mirror already satisfies Hermes' native Agent Skills standard support — no adapter directory was needed there. Documented two ways to enable it: a one-time `hermes skills trust <path>` for project-local use, or registering `skills/` under `skills.external_dirs` in `~/.hermes/config.yaml` for a permanent, cross-project setup with no trust step. New `assemble-with-hermes-team` skill spawns each specialist role via Hermes' `delegate_task` (there is no persistent per-role agent-definition file format to ship, unlike Codex/OpenCode/Grok) and, when the current profile has the `kanban` toolset enabled, tracks the plan on Hermes' native kanban board (`kanban_create`/`kanban_list`/`kanban_link`/`kanban_unblock`) instead of an in-memory list. Neither the orchestrator-side kanban tools nor the dispatcher-only worker tools (`kanban_complete`, `kanban_comment`, `kanban_block`, etc., which require a dedicated Hermes profile per role) are available by default — a regular session has zero `kanban_*` tools until a profile explicitly enables the toolset — so the skill falls back to a plain, unshared plan (same as Codex/OpenCode) when it isn't. README, AGENTS.md, `assemble-team`, `using-brooks-team`, and `administrator` updated accordingly.
+
 ## [1.2.1] - 2026-09-03
 
 ### Fixed
