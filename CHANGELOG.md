@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Hermes Agent support**: this repo's `.agents/skills/` mirror already satisfies Hermes' native Agent Skills standard support — no adapter directory was needed there. Documented two ways to enable it: a one-time `hermes skills trust <path>` for project-local use, or registering `skills/` under `skills.external_dirs` in `~/.hermes/config.yaml` for a permanent, cross-project setup with no trust step. New `assemble-with-hermes-team` skill spawns each specialist role via Hermes' `delegate_task` (there is no persistent per-role agent-definition file format to ship, unlike Codex/OpenCode/Grok) and, when the current profile has the `kanban` toolset enabled, tracks the plan on Hermes' native kanban board (`kanban_create`/`kanban_list`/`kanban_link`/`kanban_unblock`) instead of an in-memory list. README, AGENTS.md, `assemble-team`, `using-brooks-team`, and `administrator` updated accordingly.
+
+### Changed
+
+- **`assemble-with-hermes-team` revised after live dogfooding**: the CLI-driven kanban dispatcher (`hermes kanban`, usable even without the `kanban` toolset enabled) is now a first-class second mode alongside `delegate_task`, not an afterthought, plus a `todo_list`/plain-notes fallback (Path C) when neither kanban mode applies. Corrected two inaccuracies field-testing surfaced: the worker-lifecycle kanban tools (`kanban_complete`, etc.) are gated by whether the *dispatcher* launched the task, not by needing a dedicated per-role profile — a shared `default` profile dispatched by the dispatcher gets them too — and `delegate_task`'s `role` parameter may not appear on a given Hermes version's live tool schema, so the skill and docs now hedge it instead of assuming it's always present. Also adds a greenfield rule (implement before spawning Copilot/Tester), same-file card serialization guidance, and a reminder to re-verify a child's self-reported results before trusting them. README and AGENTS.md updated to match.
+
 ## [1.2.1] - 2026-09-03
 
 ### Fixed

@@ -23,9 +23,9 @@ This framework organizes AI-assisted software development around Fred Brooks' Su
 | Copilot | `copilot` | Before completing any significant feature | Yes (or inline review) |
 | Tester | `tester` | Any feature, bugfix, or quality concern | Yes (or inline) |
 | Administrator | `administrator` | Multi-task planning, tracking, prioritization | Yes (in Codex) / inline on other platforms |
-| Editor | `editor` | Docs, specs, READMEs, commit messages | Optional dispatch in Codex; optional teammate via grok-team or Claude Agent Teams |
-| Program Clerk | `program-clerk` | File reorganization, naming, library structure | Optional dispatch in Codex; optional teammate via grok-team or Claude Agent Teams |
-| Toolsmith | `toolsmith` | Repetitive tasks, missing automation, workflow pain | Optional dispatch in Codex; optional teammate via grok-team or Claude Agent Teams |
+| Editor | `editor` | Docs, specs, READMEs, commit messages | Optional dispatch in Codex; optional teammate via grok-team, hermes-team, or Claude Agent Teams |
+| Program Clerk | `program-clerk` | File reorganization, naming, library structure | Optional dispatch in Codex; optional teammate via grok-team, hermes-team, or Claude Agent Teams |
+| Toolsmith | `toolsmith` | Repetitive tasks, missing automation, workflow pain | Optional dispatch in Codex; optional teammate via grok-team, hermes-team, or Claude Agent Teams |
 | Language Lawyer | `language-lawyer` | Framework subtlety, edge case, version concern | Yes (or inline) |
 
 ## When to Dispatch vs. Inline Guidance

@@ -110,6 +110,8 @@ A delegation without explicit acceptance criteria is a recipe for rework.
 
 The Administrator uses the platform's task-tracking tool (`TodoWrite` on Claude Code, `todo_write` on Grok Build, or equivalent) to maintain live task state. The task list is the ground truth — not memory, not chat history.
 
+On Hermes Agent, this is the kanban board (`kanban_create`/`kanban_list`) when the current profile has the `kanban` toolset explicitly enabled, or the `hermes kanban` CLI when it's not (a regular session has no `kanban_*` tools by default, but the CLI can still work — see `assemble-with-hermes-team`). Failing both, use Hermes' `todo_list` tool if it's available, or an explicit plan carried in context otherwise (same as Codex/OpenCode).
+
 On Claude Code, `TodoWrite` is off by default as of CLI v2.1.233 for current-generation models (Sonnet 5, Opus 4.8, Fable 5, Mythos 5, and later) — set `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` to restore it. See the [Agent Teams setup section](../../README.md#claude-code) for details.
 
 Every task gets:

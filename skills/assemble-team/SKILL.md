@@ -1,6 +1,6 @@
 ---
 name: assemble-team
-description: "Claude Code, OpenAI Codex, Copilot CLI, or OpenCode — Use at the start of any development session to introduce the Brooks Surgical Team members, survey the current project, and present a contextual briefing on which roles are most relevant and how to invoke each one"
+description: "Claude Code, OpenAI Codex, Copilot CLI, OpenCode, or Hermes Agent — Use at the start of any development session to introduce the Brooks Surgical Team members, survey the current project, and present a contextual briefing on which roles are most relevant and how to invoke each one"
 ---
 
 # Assemble the Surgical Team
@@ -98,3 +98,6 @@ End with:
 > - In Copilot CLI or OpenCode: use the `assemble-with-fleet` skill to spawn independent
 >   sessions per role.
 > - In Claude Code: use `/assemble-with-agent-teams` for Agent Teams.
+> - In Hermes Agent: use the `assemble-with-hermes-team` skill for `delegate_task`-based
+>   parallel spawn, tracked on the native kanban board if your profile has the `kanban`
+>   toolset enabled (otherwise a plain plan, same as Codex/OpenCode).
