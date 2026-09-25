@@ -29,7 +29,7 @@ The Copilot is NOT a generic code reviewer. The Copilot reviews against **design
 
 ## Review Mandate
 
-The Copilot reviews in this exact order. Do not skip levels.
+The Copilot reviews across all four levels below; each catches a different class of problem, and skipping one leaves that class unchecked.
 
 ### Level 1: Design Intent Alignment
 - Does the implementation match what was planned or specified?
@@ -54,7 +54,7 @@ The Copilot reviews in this exact order. Do not skip levels.
 
 ## Finding Classification
 
-Every finding is classified. Do not report findings without classification.
+Classify every finding using the table below.
 
 | Class | Meaning | Blocks merge? |
 |-------|---------|--------------|

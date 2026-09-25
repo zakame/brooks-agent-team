@@ -51,36 +51,9 @@ Doc writing passes (Editor)
 
 ## The Core Rule
 
-**Invoke the relevant role skill BEFORE acting in that role.** Even a 1% chance a role applies means invoking the skill to check. Supporting roles are not optional suggestions — they are mandatory process gates that protect the Surgeon's work.
+**Invoke a role's skill before acting in that role** — the skill carries the protocol the role follows, so acting without it means improvising the role.
 
-```dot
-digraph team_flow {
-    "User request" [shape=doublecircle];
-    "Is this implementation work?" [shape=diamond];
-    "Invoke surgeon skill" [shape=box];
-    "Is this review/quality work?" [shape=diamond];
-    "Invoke copilot or tester skill" [shape=box];
-    "Is this planning/tracking?" [shape=diamond];
-    "Invoke administrator skill" [shape=box];
-    "Other supporting need?" [shape=diamond];
-    "Invoke relevant role skill" [shape=box];
-    "Proceed" [shape=doublecircle];
-
-    "User request" -> "Is this implementation work?";
-    "Is this implementation work?" -> "Invoke surgeon skill" [label="yes"];
-    "Is this implementation work?" -> "Is this review/quality work?" [label="no"];
-    "Invoke surgeon skill" -> "Proceed";
-    "Is this review/quality work?" -> "Invoke copilot or tester skill" [label="yes"];
-    "Is this review/quality work?" -> "Is this planning/tracking?" [label="no"];
-    "Invoke copilot or tester skill" -> "Proceed";
-    "Is this planning/tracking?" -> "Invoke administrator skill" [label="yes"];
-    "Is this planning/tracking?" -> "Other supporting need?" [label="no"];
-    "Invoke administrator skill" -> "Proceed";
-    "Other supporting need?" -> "Invoke relevant role skill" [label="yes"];
-    "Other supporting need?" -> "Proceed" [label="no"];
-    "Invoke relevant role skill" -> "Proceed";
-}
-```
+For any user request: if it's implementation work, invoke the surgeon skill; if it's review/quality work, invoke copilot or tester; if it's planning/tracking, invoke administrator; for any other supporting need, invoke the relevant role skill — otherwise, proceed.
 
 ## User Instructions Always Win
 

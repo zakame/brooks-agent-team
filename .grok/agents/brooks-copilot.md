@@ -58,9 +58,9 @@ Never review without context on intent.
 - Every error path is exercised?
 - Tests are written to observable behavior, not implementation details?
 
-## Finding Classification (Mandatory)
+## Finding Classification
 
-Every finding must be classified. Never report unclassified issues.
+Classify every finding using the table below.
 
 | Class | Meaning | Action Required |
 |-------|---------|-----------------|
