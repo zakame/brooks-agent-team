@@ -1,6 +1,6 @@
 # brooks-agent-team
 
-A skills plugin that organizes AI-assisted software development around Fred Brooks' **Surgical Team** model from *The Mythical Man-Month* (1975). Compatible with **Claude Code**, **GitHub Copilot CLI**, **OpenCode**, **OpenAI Codex**, **Grok Build**, and **Hermes Agent**.
+A skills plugin that organizes AI-assisted software development around Fred Brooks' **Surgical Team** model from *The Mythical Man-Month* (1975). Compatible with **Claude Code**, **GitHub Copilot CLI**, **OpenCode**, **OpenAI Codex**, **Grok Build**, **Hermes Agent**, and **Pi Coding Agent**.
 
 Instead of every team member working on all parts of a system, the Surgical Team concentrates critical work in one skilled "surgeon" (chief programmer), supported by specialized roles that keep the surgeon focused and productive. This plugin maps those roles to agent skills and dispatch templates.
 
@@ -22,7 +22,7 @@ This project draws from two sources:
 
 **[Superpowers by Jesse Vincent](https://github.com/obra/superpowers)**: a Claude Code skills framework that demonstrated how composable, role-aware skills can guide an AI agent through disciplined software development workflows. The structure, conventions, and plugin format of this project follow Superpowers' design closely.
 
-The `SKILL.md` format used here conforms to the [Agent Skills open standard](https://github.com/agentskills/agentskills), which is supported by GitHub Copilot CLI, Claude Code, OpenCode, OpenAI Codex (via the `.agents/skills/` mirror described below), and [Hermes Agent](https://github.com/NousResearch/hermes-agent) (native, once the project-local skill directory is trusted — see the [Hermes Agent section](#hermes-agent) below).
+The `SKILL.md` format used here conforms to the [Agent Skills open standard](https://github.com/agentskills/agentskills), which is supported by GitHub Copilot CLI, Claude Code, OpenCode, OpenAI Codex (via the `.agents/skills/` mirror described below), [Hermes Agent](https://github.com/NousResearch/hermes-agent) (native, once the project-local skill directory is trusted — see the [Hermes Agent section](#hermes-agent) below), and [Pi Coding Agent](https://github.com/earendil-works/pi/tree/main/packages/coding-agent) (native, once the project-local skill directory is trusted, same as Hermes Agent — see the [Pi Coding Agent section](#pi-coding-agent) below).
 
 ## The Team
 
@@ -299,6 +299,39 @@ Use the assemble-with-hermes-team skill
 
 Hermes ships a kanban tool (`kanban_create`/`kanban_list`/`kanban_link`/`kanban_unblock`, plus dispatcher-only worker tools like `kanban_complete`/`kanban_comment`/`kanban_block`) backed by SQLite and shared across every Hermes profile/session on the machine — genuinely more capable than Claude Code's `TaskCreate`/`TaskList`/`TaskUpdate`/`TaskGet` in some respects (durable storage, dependency-aware auto-promotion between states, a review state, comment threads, and a live dashboard). The orchestrator-side tools aren't available by default: "a regular `hermes chat` session has zero `kanban_*` tools in its schema unless the active profile explicitly enables the `kanban` toolset for orchestrator work" (per Hermes' own docs). Even without that toolset, the `hermes kanban` shell CLI can drive the same board directly — `assemble-with-hermes-team`'s CLI-dispatcher mode uses this when the plan should outlive the session but the toolset isn't enabled. The worker-lifecycle tools (`kanban_show`, `kanban_complete`, `kanban_block`, `kanban_request_review`, `kanban_comment`) are gated separately, by whether the kanban dispatcher itself launched the task (`HERMES_KANBAN_TASK` set) — a shared `default` profile dispatched this way gets them too, not only a dedicated per-role profile. `assemble-with-hermes-team`'s default `delegate_task` flow gets neither set automatically, and even with the orchestrator toolset enabled, nothing in that flow closes a card out — the `delegate_task` result is the real completion signal. If neither kanban path applies, fall back to Hermes' `todo_list` tool when present, or plain working notes otherwise. See `skills/assemble-with-hermes-team/SKILL.md` for the full workflow, including the fully-autonomous dedicated-profile option for teams run often enough to justify it.
 
+### Pi Coding Agent
+
+[Pi Coding Agent](https://github.com/earendil-works/pi/tree/main/packages/coding-agent) (pre-1.0; this integration was verified against v0.87.1, 2026-09) natively supports the Agent Skills standard, so **no new adapter files are needed for skills** — but see the trust step below.
+
+#### Skills
+
+Pi discovers Agent Skills from `.agents/skills/`, both a global `~/.agents/skills/` and a project-local `.agents/skills/` walked from the working directory up to the repository root. **Recommended: symlink once, globally, and skip project trust entirely.** `~/.agents/skills/` is scanned unconditionally in every project — confirmed at the source level (`package-manager.ts`'s resource-assembly order adds it completely outside the trust-gated branch, not merely exempted from the trust check) — so a one-time setup makes every skill in this repo available everywhere, permanently, with no trust prompt:
+
+```bash
+git clone https://github.com/zakame/brooks-agent-team /path/to/brooks-agent-team
+ln -sf /path/to/brooks-agent-team/skills ~/.agents/skills/brooks-agent-team
+```
+
+Symlinks are fully resolved by Pi's scanner (confirmed in `skills.ts`), so this is equivalent to a real copy; only requirement is that no path segment from `~/.agents/skills/` down to a `SKILL.md` starts with `.` or is `node_modules`. Skills are then usable immediately, from any project:
+
+```
+Use the assemble-team skill
+Use the surgeon skill to implement this feature.
+Use the copilot skill to review my changes.
+```
+
+If a target project happens to define its own trusted skill of the same name, that project's own skill wins the collision — your global one only ever loses to that, never to another global/user source.
+
+**Alternative for a one-off session:** `pi --skill /path/to/brooks-agent-team/skills` (repeatable per path) also bypasses project trust — it's loaded as a temporary, explicitly-supplied CLI resource (confirmed in `resource-loader.ts`: CLI-supplied paths never go through `isProjectTrusted()`), so it works without touching `~/.agents/skills/` at all.
+
+**Alternative if you'd rather keep it project-local:** a project-local `.agents/skills/` directory (e.g. copying or symlinking this repo's `skills/` into the project you're working on, or working from inside a clone of this repo directly) is gated by the same one-time project-trust decision as Pi's own `.pi/skills/` — confirmed in `hasTrustRequiringProjectResources()` (`packages/coding-agent/src/core/trust-manager.ts`). Trust the project once (however your Pi session prompts for it, or by pre-approving it) and it behaves the same as the global setup above.
+
+This repository's `AGENTS.md` is also read directly by Pi's own context-file mechanism (`AGENTS.md`/`CLAUDE.md`, agent-dir + cwd + parent directories) — a separate mechanism from skills, not trust-gated, and no adapter needed there either.
+
+#### Subagent dispatch (optional, extension-gated)
+
+pi-coding-agent's core has **no built-in subagent tool and no per-role agent-definition format** — confirmed by inspecting its full extension API, which has no conversation-spawning primitive. The only way to get named, dispatchable subagents is the official `examples/extensions/subagent/` extension, which is opt-in example code, not installed by default. If a user has it installed, this repo ships `.pi/agents/copilot.md`, `.pi/agents/tester.md`, and `.pi/agents/language-lawyer.md` in that extension's format (`name`/`description` required, `tools`/`model` optional) — they're inert otherwise. See [Dispatch subagent roles](#dispatch-subagent-roles) and `skills/assemble-with-pi-team/SKILL.md` for the full pattern, including how to enable project-scope discovery (`agentScope: "project"`/`"both"` on the `subagent` tool call — the default `"user"` scope skips `.pi/agents/` entirely).
+
 ## Usage
 
 ### Two ways to start
@@ -311,6 +344,7 @@ Hermes ships a kanban tool (`kanban_create`/`kanban_list`/`kanban_link`/`kanban_
 | `assemble-with-fleet` skill | Copilot CLI & OpenCode | Parallel work — spawns one independent session per role (Copilot CLI uses `/fleet`; OpenCode uses the task tool) |
 | `/assemble-with-agent-teams` command | Claude Code only | Parallel work — spawns via Claude Code Agent Teams |
 | `assemble-with-hermes-team` skill | Hermes Agent only | Parallel work — three modes: ephemeral `delegate_task` (default), the kanban dispatcher via the `hermes kanban` CLI (no toolset needed), or the kanban toolset directly when your profile has it enabled |
+| `assemble-with-pi-team` skill | Pi Coding Agent only | Parallel work — only if the optional `subagent` example extension is installed (OS-process dispatch); otherwise Pi has no parallel-agent mechanism at all and `assemble-team` is the only option |
 
 ### `assemble-team` — single-session briefing
 
@@ -337,6 +371,11 @@ Use the assemble-team skill
 ```
 
 **Hermes Agent:**
+```
+Use the assemble-team skill
+```
+
+**Pi Coding Agent:**
 ```
 Use the assemble-team skill
 ```
@@ -397,11 +436,17 @@ Use the assemble-with-grok-team skill
 Use the assemble-with-hermes-team skill
 ```
 
+**Pi Coding Agent** — uses `assemble-with-pi-team` skill, but only if the optional `subagent` example extension is installed (check your tool list for a `subagent` tool first). If present, it dispatches `.pi/agents/copilot.md`/`tester.md`/`language-lawyer.md` as genuinely separate OS processes via the extension's `parallel` mode (max 8 tasks / 4 concurrent). If absent, pi-coding-agent has no parallel-agent mechanism at all — use `assemble-team` for single-session work instead:
+```
+Use the assemble-with-pi-team skill
+```
+
 **What you get by platform:**
 - **Claude Agent Teams:** independent teammates coordinated by a lead, with a shared task list, dependency tracking, direct teammate messaging, and file ownership guidance. The shared task list requires `TaskCreate`/`TaskGet`/`TaskUpdate`/`TaskList` (the single-session `TodoWrite` checklist is gated by the same flag but isn't itself part of team coordination); those are on by default only on older models like Opus 4.7 — Sonnet 5, Opus 4.8, Fable 5, Mythos 5, and later need `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` (see above), or teammates silently coordinate via messages only.
 - **Copilot CLI / OpenCode:** fleet/task-tool style parallel workers following the shared task list included in their prompts or platform session state.
 - **Codex:** explicit parallel specialist subagents, consolidated summaries back to the main thread, and `/agent` for inspecting, steering, and switching between agent threads. Codex does not currently provide a Claude Agent Teams-style shared task list or direct teammate mailbox.
 - **Hermes Agent:** ephemeral `delegate_task` children by default (no persistent per-role agent file exists) — the plan lives in what you tell each child, and its result is the real completion signal. For a plan that outlives the session, the kanban dispatcher tracks it on Hermes' own board instead — durable SQLite storage, dependency-aware states, and a review state — via the profile's `kanban` toolset when enabled, or the `hermes kanban` CLI when it isn't. The worker-lifecycle tools that close a card out autonomously (`kanban_complete`, `kanban_comment`, `kanban_block`, etc.) go to any task the dispatcher itself launches, a shared `default` profile included — a dedicated profile per role just gives it a persistent identity, not the lifecycle tools themselves.
+- **Pi Coding Agent:** no built-in parallelism and no shared task list at all — core has neither a subagent tool nor a task-tracking primitive. Real parallel teammates require a user-installed, pre-1.0, example-code extension (`subagent`), which spawns separate OS processes per task (single/parallel/chain modes) with no shared state beyond what you put in each task's prompt. Without that extension, this platform gets single-session `assemble-team` only, same experience as Codex/OpenCode without their respective multi-agent features.
 
 ### Invoke skills directly
 
@@ -439,6 +484,13 @@ Use the language-lawyer skill for this edge case.
 ```
 
 **Hermes Agent** — use the skill name directly in your prompt (once trusted, see [Hermes Agent](#hermes-agent) above):
+```
+Use the surgeon skill to start implementing this feature.
+Use the copilot skill to review my changes.
+Use the language-lawyer skill for this edge case.
+```
+
+**Pi Coding Agent** — use the skill name directly in your prompt (once the project is trusted, see [Pi Coding Agent](#pi-coding-agent) above):
 ```
 Use the surgeon skill to start implementing this feature.
 Use the copilot skill to review my changes.
@@ -488,6 +540,12 @@ delegate_task(goal: "Review this diff against its design intent.", context: "<sk
 ```
 (Omit `role` unless your Hermes version's live tool schema actually lists it — `goal`/`context`/`output_schema` are the parameters field-verified to work.) `assemble-with-hermes-team` does this for every selected role, defaulting to this ephemeral mode or the kanban dispatcher as the work needs; see that skill for the full pattern.
 
+**Pi Coding Agent** — no dispatch tool exists in core at all; `.pi/agents/copilot.md`, `tester.md`, and `language-lawyer.md` only work if the optional `subagent` example extension is installed, and only when the tool call requests project scope:
+```
+subagent(mode: "single", agentScope: "project", agentName: "copilot", task: "Review this diff against its design intent. <diff/files>")
+```
+Without that extension, there is no way to dispatch these roles as subagents on Pi at all — invoke the skill inline in the main session instead. See `skills/assemble-with-pi-team/SKILL.md` for the parallel-mode pattern.
+
 ## Repository Structure
 
 ```
@@ -518,9 +576,16 @@ skills/                         Shared across all platforms (Agent Skills standa
   assemble-with-fleet/SKILL.md      Parallel team spawn via Copilot CLI fleet mode or OpenCode task tool
   assemble-with-grok-team/SKILL.md  Parallel spawn via Grok native subagents + worktrees + shared todo_write
   assemble-with-hermes-team/SKILL.md  Parallel spawn via Hermes delegate_task + native kanban board
+  assemble-with-pi-team/SKILL.md      Parallel spawn via Pi's optional subagent example extension
 
 .grok/                          Grok Build specific
   agents/                       Native agent defs (brooks-copilot, brooks-tester, brooks-language-lawyer)
+
+.pi/                             Pi Coding Agent specific
+  agents/                          Subagent files (only take effect with the optional subagent extension)
+    copilot.md                      Code reviewer agent
+    tester.md                       Adversarial tester agent
+    language-lawyer.md              Language and framework edge-case agent
 
 .claude-plugin/                 Claude Code specific
   plugin.json                     Plugin manifest (name, version, author)
@@ -557,14 +622,16 @@ Platform-specific files provide deeper integration:
 | `.codex/agents/` | OpenAI Codex | Per-role TOML agent configs with developer instructions |
 | `.claude-plugin/` | Claude Code & Copilot CLI | Plugin manifest (marketplace loading) |
 | `.grok/agents/` | Grok Build | Native agent definitions (`brooks-copilot`, `brooks-tester`, `brooks-language-lawyer`) |
+| `.pi/agents/` | Pi Coding Agent | Subagent definitions, inert unless the optional `subagent` example extension is installed |
 | `agents/` | Claude Code | Dispatch templates for subagent roles (Copilot, Tester, Language Lawyer) |
 | `commands/` | Claude Code | Slash commands (`/assemble-team`, `/assemble-with-agent-teams`) |
 | `.github/agents/` | Copilot CLI | Custom agent definitions for `/agent` dispatch |
 | `.opencode/agents/` | OpenCode | Custom agent definitions for subagent dispatch |
-| `skills/assemble-team/` | All platforms (Claude Code, OpenAI Codex, Grok Build, Copilot CLI, OpenCode & Hermes Agent) | Team briefing skill |
+| `skills/assemble-team/` | All platforms (Claude Code, OpenAI Codex, Grok Build, Copilot CLI, OpenCode, Hermes Agent & Pi Coding Agent) | Team briefing skill |
 | `skills/assemble-with-grok-team/` | Grok Build | Parallel spawn via native `spawn_subagent`, worktrees, and shared `todo_write` |
 | `skills/assemble-with-fleet/` | Copilot CLI & OpenCode | Parallel spawn via fleet mode or task tool |
 | `skills/assemble-with-hermes-team/` | Hermes Agent | Parallel spawn via `delegate_task` and the native kanban board |
+| `skills/assemble-with-pi-team/` | Pi Coding Agent | Parallel spawn via the optional `subagent` example extension, if installed |
 
 > **Note:** Copilot CLI recognizes `.claude-plugin/` in addition to `.github/plugin/` when loading plugin manifests.
 
@@ -576,14 +643,14 @@ Full agent dispatch is supported through `.opencode/agents/`, which includes Cop
 
 If OpenCode updates its agent frontmatter format, check the [OpenCode agent specification](https://opencode.ai/docs/agents/) to verify these files remain current.
 
-> **Note for maintainers:** The core dispatch set (Copilot, Tester, Language Lawyer) is duplicated across five locations: `.codex/agents/` (Codex), `.grok/agents/` (Grok Build), `.opencode/agents/` (OpenCode), `agents/` (Claude Code), and `.github/agents/` (Copilot CLI). The four Codex-only specialists (Editor, Toolsmith, Program Clerk, Administrator) exist only in `.codex/agents/` and have no peer files on other platforms. This has already caused real drift more than once (a permission-grant fix landed with three different wordings; a skill exclusion was added to some copies and missed others, most recently when Grok's guard blocks were missing the same exclusion that had already been backported to the other four). When changing a role's dispatch template, update every platform copy that role has and check that these stay equivalent:
+> **Note for maintainers:** The core dispatch set (Copilot, Tester, Language Lawyer) is duplicated across six locations: `.codex/agents/` (Codex), `.grok/agents/` (Grok Build), `.opencode/agents/` (OpenCode), `agents/` (Claude Code), `.github/agents/` (Copilot CLI), and `.pi/agents/` (Pi Coding Agent, inert unless the optional `subagent` extension is installed). The four Codex-only specialists (Editor, Toolsmith, Program Clerk, Administrator) exist only in `.codex/agents/` and have no peer files on other platforms. This has already caused real drift more than once (a permission-grant fix landed with three different wordings; a skill exclusion was added to some copies and missed others, most recently when Grok's guard blocks were missing the same exclusion that had already been backported to the other four). When changing a role's dispatch template, update every platform copy that role has and check that these stay equivalent:
 > - The protocol body (review steps, failure-mode checklist, output format)
 > - The skill-exclusion list (`SUBAGENT-STOP` / `[CODEX-STOP]` / Grok's inline guard)
-> - The tool/permission grant, expressed in each platform's own format (Claude Code `tools`/`disallowedTools`, OpenCode `permission`, Copilot CLI `tools`, Codex `sandbox_mode`, Grok `tools:`)
+> - The tool/permission grant, expressed in each platform's own format (Claude Code `tools`/`disallowedTools`, OpenCode `permission`, Copilot CLI `tools`, Codex `sandbox_mode`, Grok `tools:`, Pi `tools:` on the agent frontmatter)
 >
-> With a fifth platform now in place, a single canonical source per role with generated or symlinked platform shims is worth serious consideration instead of continuing to hand-sync five copies.
+> With a sixth platform now in place, a single canonical source per role with generated or symlinked platform shims is worth serious consideration instead of continuing to hand-sync six copies.
 >
-> Hermes Agent does not add a sixth copy: it has no on-disk per-role agent-definition format at all, so there is no `.hermes/agents/`-style directory to keep in sync. Its dispatch is ephemeral (`delegate_task` with a skill body pasted in as context) — see the [Hermes Agent](#hermes-agent) section above.
+> Hermes Agent does not add a copy: it has no on-disk per-role agent-definition format at all, so there is no `.hermes/agents/`-style directory to keep in sync. Its dispatch is ephemeral (`delegate_task` with a skill body pasted in as context) — see the [Hermes Agent](#hermes-agent) section above.
 
 ### OpenAI Codex compatibility
 
@@ -614,6 +681,18 @@ Hermes has no persistent per-role agent-definition file — no directory in this
 Hermes reads `AGENTS.md` with its own hierarchical precedence (repo-wide, then package-level, then most-specific-in-cwd, discovered lazily as the agent reads into subdirectories) and supports `AGENTS.override.md` next to any `AGENTS.md`, the same override concept Codex uses. `delegate_task` children inherit the parent session's already-resolved project-context chain.
 
 If Hermes Agent updates its skills/delegation/kanban tooling, check its [documentation](https://github.com/NousResearch/hermes-agent) (`website/docs/user-guide/features/`) to verify these claims remain current.
+
+### Pi Coding Agent compatibility
+
+[Pi Coding Agent](https://github.com/earendil-works/pi/tree/main/packages/coding-agent) (pre-1.0; verified against `@earendil-works/pi-coding-agent` v0.87.1, 2026-09) natively supports the [Agent Skills open standard](https://github.com/agentskills/agentskills). It discovers skills from `~/.pi/agent/skills/`, its own project-local `.pi/skills/` (trust-gated), and — the path this repo relies on — the portable `~/.agents/skills/` (global, always trusted) and `.agents/skills/` (project-local, walked from the working directory up to the repository root). **Project-local `.agents/skills/` is trust-gated exactly like `.pi/skills/`**, not exempt: `hasTrustRequiringProjectResources()` (`packages/coding-agent/src/core/trust-manager.ts`) explicitly flags a project-local `.agents/skills/` directory found anywhere from cwd up to an ancestor, triggering Pi's normal trust resolution (interactive confirm / saved `trust.json` decision / `defaultProjectTrust`) — only the path exactly equal to the global `~/.agents/skills/` is excluded from that walk-up check. Two ways around that trust step entirely: symlink this repo's `skills/` into the *global* `~/.agents/skills/` once (unconditionally scanned, confirmed structurally outside the trust-gated branch in `package-manager.ts`'s resource-assembly order — see the [Pi Coding Agent installation section](#pi-coding-agent) above for the exact command), or use the `--skill <path>` CLI flag (`docs/cli.md`) for a one-off session, which loads as a temporary CLI-supplied resource that never calls `isProjectTrusted()` (`resource-loader.ts`). Pi separately reads `AGENTS.md`/`CLAUDE.md` as "context files" from its agent directory, the working directory, and parent directories (closest wins; `AGENTS.override.md` replaces only a same-directory file, not an ancestor's) — a distinct, non-trust-gated mechanism; no documented size cap exists, unlike Codex's 32 KiB limit.
+
+**No built-in subagent tool or task list.** Direct inspection of the full `ExtensionAPI` surface (`packages/coding-agent/src/core/extensions/types.ts`) turned up no conversation-spawning primitive — no `delegate_task`, no `spawnChild`, nothing. A more sophisticated in-process multi-conversation design ("pico3") exists in `pi-agent-core`'s test harness, but its own docs state plainly it is "not existing package exports," and Pi's production agent loop (`src/core/agent-session.ts`) doesn't import it. Bare pi-coding-agent is a genuinely single-agent-loop architecture: one session, one active branch, sequential turns.
+
+**The `subagent` example extension.** The one way to get real parallel teammates is `examples/extensions/subagent/`, official but opt-in example code, not installed by default. It spawns separate **OS processes** per task (`pi --mode json -p --no-session ...`), in three modes — single, parallel (up to 8 tasks / 4 concurrent, hardcoded, not configurable), and chain (sequential with output handoff) — each with a fully isolated context window, streamed progress, and usage/cost tracking. It also defines the closest thing to a per-role agent-definition format: Markdown files with `name`/`description` (required) plus optional `tools`/`model` frontmatter, at `~/.pi/agent/agents/*.md` (user-scope, always scanned) and `.pi/agents/*.md` (project-scope, scanned only when the `subagent` tool call sets `agentScope: "project"` or `"both"` — default is `"user"` only). This repo ships `.pi/agents/copilot.md`, `tester.md`, and `language-lawyer.md` in that format; they're inert unless a user has the extension installed and requests project scope. There is no shared task-list primitive either — the extension's own `todo.ts` example is likewise just example code, not a core feature. See `skills/assemble-with-pi-team/SKILL.md` for the full workflow and its fallback to single-session `assemble-team` when the extension isn't present.
+
+**No enforced sandbox.** `docs/security.md` states plainly that safety comes from OS-level isolation (dedicated user, container, VM), not an in-app permission boundary — there is no Codex-style `sandbox_mode = "read-only"`. `tools:` in an agent file is a real allow-list (the session gets exactly the tools named), so Copilot's and Language Lawyer's `.pi/agents/*.md` omitting `edit`/`write` is a genuine restriction, not just a prompt convention — but project-local `.pi/agents/` itself only gets a soft, extension-implemented confirm prompt in untrusted projects (skipped in non-interactive modes, or when the caller passes `confirmProjectAgents: false`), not one of Pi's core `.pi/`-resource trust gates.
+
+Pi Coding Agent is pre-1.0 and has shipped breaking changes in consecutive recent releases (per its own CHANGELOG) — if it updates its extension API, subagent example, or context-file conventions, re-verify against its [repository](https://github.com/earendil-works/pi/tree/main/packages/coding-agent) before trusting these claims.
 
 ## Philosophy
 

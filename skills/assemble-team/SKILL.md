@@ -1,6 +1,6 @@
 ---
 name: assemble-team
-description: "Claude Code, OpenAI Codex, Copilot CLI, OpenCode, or Hermes Agent — Use at the start of any development session to introduce the Brooks Surgical Team members, survey the current project, and present a contextual briefing on which roles are most relevant and how to invoke each one"
+description: "Claude Code, OpenAI Codex, Copilot CLI, OpenCode, Hermes Agent, or Pi Coding Agent — Use at the start of any development session to introduce the Brooks Surgical Team members, survey the current project, and present a contextual briefing on which roles are most relevant and how to invoke each one"
 ---
 
 # Assemble the Surgical Team
@@ -101,3 +101,6 @@ End with:
 > - In Hermes Agent: use the `assemble-with-hermes-team` skill for `delegate_task`-based
 >   parallel spawn, tracked on the native kanban board if your profile has the `kanban`
 >   toolset enabled (otherwise a plain plan, same as Codex/OpenCode).
+> - In Pi Coding Agent: use the `assemble-with-pi-team` skill if the optional `subagent`
+>   example extension is installed (real parallel dispatch, OS-process based); otherwise
+>   pi-coding-agent has no built-in parallel-agent mechanism, so stay single-session here.
