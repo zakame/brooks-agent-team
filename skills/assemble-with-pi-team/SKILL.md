@@ -11,7 +11,7 @@ If you were spawned by the `subagent` tool, you are already playing one of these
 
 ## Check This First: Is the `subagent` Tool Even Available?
 
-pi-coding-agent core ships no subagent/delegate tool and no built-in task list — this is confirmed by inspecting the full `ExtensionAPI` surface in `packages/coding-agent/src/core/extensions/types.ts`, which has no conversation-spawning primitive at all. The **only** way to get real parallel teammates on Pi is the official `examples/extensions/subagent/` extension, which is opt-in example code, not a first-party feature, and pre-1.0 (breaking changes have landed release-to-release).
+pi-coding-agent core ships no subagent/delegate tool and no built-in task list — this is confirmed by inspecting the full `ExtensionAPI` surface in `packages/coding-agent/src/core/extensions/types.ts`, which has no conversation-spawning primitive at all. The **only** way to get real parallel teammates on Pi is the official `examples/extensions/subagent/` extension, which is opt-in example code, not a first-party feature, and pre-1.0 (breaking changes have landed release-to-release, verified against v0.87.1).
 
 Check your tool list for a `subagent` tool before doing anything else in this skill:
 - **Present** → continue below.
@@ -46,7 +46,7 @@ The `subagent` extension has no task-board equivalent; each spawned subagent is 
 
 Call the `subagent` tool with `mode: "parallel"` and one `tasks[]` entry per role (max 8 tasks / 4 concurrent — hardcoded in the extension, not configurable). For each task:
 
-- `agentName`: `"copilot"`, `"tester"`, or `"language-lawyer"` — these resolve to `.pi/agents/*.md` in this repo, **only if the call also sets `agentScope: "project"` or `"both"`** (default is `"user"`-scope only, which silently ignores `.pi/agents/`).
+- `agentName`: `"copilot"`, `"tester"`, or `"language-lawyer"` — these resolve to `.pi/agents/*.md` in this repo, **only if the call also sets `agentScope: "project"` or `"both"`** (default is `"user"`-scope only, which silently ignores `.pi/agents/`). If the user has instead symlinked these role files into the global `~/.pi/agent/agents/` (see the [README's Pi Coding Agent section](../../README.md#pi-coding-agent)), omit `agentScope` entirely — `"user"` is the default and resolves from there in any project.
 - `task`: the role's full assignment in one shot — project summary, the concrete diff/spec/question, file ownership (below). There is no lightweight-first-turn/resume split; each subagent is a fresh process that only knows what's in this string.
 
 ```json
