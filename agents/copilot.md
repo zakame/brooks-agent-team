@@ -45,7 +45,7 @@ Do not make assumptions about intent. If the spec is ambiguous, ask before revie
 
 ## Review Protocol
 
-Perform your review in this exact order. Do not skip levels.
+Perform your review across all four levels below; each catches a different class of problem, and skipping one leaves that class unchecked.
 
 ### Level 1: Design Intent Alignment
 Read the spec. Read the implementation. Check:
@@ -73,7 +73,7 @@ Check each of the following:
 
 ## Finding Classification
 
-Every finding MUST be classified. Do not report unclassified findings.
+Classify every finding using the table below.
 
 | Class | Meaning | Blocks merge? |
 |-------|---------|--------------|
