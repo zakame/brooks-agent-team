@@ -736,8 +736,8 @@ Pi Coding Agent is pre-1.0 and has shipped breaking changes in consecutive recen
 ## Philosophy
 
 - **One surgeon, many supporters.** Productivity comes from keeping the chief programmer focused, not from adding more equal contributors.
-- **Roles are process gates, not suggestions.** When a role applies, invoking its skill is mandatory — it protects the quality of the Surgeon's work.
-- **Delegate early, not late.** Recognizing the need for a supporting role at the start of a task is cheaper than discovering it after struggling.
+- **Roles carry their protocols.** Invoke a role's skill before acting in that role, so the work follows the role's protocol instead of an improvised one.
+- **Recognize support needs early.** Spotting the need for a supporting role at the start of a task is cheaper than discovering it after struggling — but dispatch a subagent only when the payoff outweighs its overhead.
 - **Code belongs to the system.** Write as if a future Surgeon will read it cold.
 
 ## License

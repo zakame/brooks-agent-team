@@ -79,8 +79,8 @@ Call `todo_write` now with the initial list. This becomes the single source of t
 
 Spawn all selected teammates in a **single response** using parallel `spawn_subagent` tool calls — each with the teammate's full task in one shot. There is no lightweight-first-turn/resume-turn split: give each teammate everything it needs up front (project summary, todos, file ownership, the actual task) and let it run to completion in the background.
 
-### Why direct dispatch (confirmed 2026-08-14)
-Earlier revisions of this skill spawned every role via the built-in `general-purpose` agent with a deliberately lightweight first-turn prompt, then used `resume_from` to deliver the real task — a workaround for an observed limitation on Grok 0.2.43 where named `.grok/agents/*.md` agents got only a single turn on direct `subagent_type` dispatch. Live headless smoke testing (`grok -p` + `--output-format streaming-messages-json`, 4 runs) confirmed this limitation is resolved on Grok 1.0.3: `brooks-copilot`, `brooks-tester` (with `isolation: "worktree"`), and `brooks-language-lawyer` each completed real multi-tool-call tasks (2-4 tool calls, scaling with task size) fully autonomously in the background on direct dispatch — `resume_from` was never called. This skill now spawns named agents directly with their full task; `resume_from` is kept only as an optional follow-up mechanism (see Monitoring below).
+### Why direct dispatch
+Spawn `brooks-copilot`, `brooks-tester`, and `brooks-language-lawyer` directly by `subagent_type`, with their full task in the initial prompt — no `general-purpose` indirection and no lightweight-first-turn/`resume_from` handoff. `resume_from` is kept only as an optional follow-up mechanism after a subagent completes (see Monitoring below).
 
 ### The real `spawn_subagent` parameters
 Per Grok's own subagent documentation:
@@ -94,7 +94,7 @@ Per Grok's own subagent documentation:
 | `isolation` | `worktree` for any role that edits files; omit (shared workspace) for read-only roles. |
 | `resume_from` | Continues a *completed* subagent's conversation with full context inherited. Use it for a genuine follow-up round (e.g. asking Copilot a clarifying question after its review lands) — not to "unblock" a task, since there's nothing to unblock anymore. |
 
-**`capability_mode` is not a `spawn_subagent` parameter (corrected 2026-09-01).** Earlier revisions of this skill passed `capability_mode` (`read-only`/`read-write`/`execute`/`all`) directly in every spawn call, based on documentation that turned out to be superseded. Current Grok subagent documentation states plainly that "capability mode is not a spawn argument," and lists `spawn_subagent`'s real parameters as exactly the six above. A role's default capability instead comes from its agent type and any `[subagents.roles.<name>].default_capability_mode` set in `.grok/config.toml`. This repo doesn't set that, since the confirmed working restriction mechanism is frontmatter `tools:` (see the Copilot/Language Lawyer notes below), not capability mode. Do not include `capability_mode` in spawn JSON; it does nothing there.
+**`capability_mode` is not a `spawn_subagent` parameter.** `spawn_subagent`'s real parameters are exactly the six above; do not include `capability_mode` in spawn JSON — it does nothing there. A role's default capability comes from its agent type and any `[subagents.roles.<name>].default_capability_mode` set in `.grok/config.toml`. This repo doesn't set that, since the working restriction mechanism here is frontmatter `tools:` (see the Copilot/Language Lawyer notes below).
 
 ### Common Rules for All Spawns
 - Set `background: true`.
@@ -329,7 +329,7 @@ This section exists because the underlying Grok platform documentation for `x.ai
 
 ## Important Grok-Specific Notes (Internal)
 
-- **Direct dispatch (confirmed 2026-08-14):** Custom agents from `.grok/agents/*.md` (brooks-*) were observed to receive only 1 turn when used as `subagent_type` on Grok 0.2.43 — that limitation is resolved on Grok 1.0.3 (live headless smoke testing: all three roles completed real multi-tool-call tasks fully autonomously on direct dispatch, no `resume_from` needed), so this skill now spawns `brooks-copilot`/`brooks-tester`/`brooks-language-lawyer` directly by name with their full task in one call. Editor/Toolsmith/Program Clerk have no `.grok/agents/*.md` definition and still spawn via `general-purpose`, invoking their cross-platform skill explicitly in the prompt — but they too get their full task up front now, not a lightweight-then-resume split.
+- **Direct dispatch:** `brooks-copilot`/`brooks-tester`/`brooks-language-lawyer` spawn directly by name with their full task in one call. Editor/Toolsmith/Program Clerk have no `.grok/agents/*.md` definition and spawn via `general-purpose`, invoking their cross-platform skill explicitly in the prompt — all roles get their full task up front, never a lightweight-then-resume split.
 - The `brooks-copilot`, `brooks-tester`, and `brooks-language-lawyer` definitions in `.grok/agents/` are both the spawn target (via `subagent_type`) and discoverable for manual dispatch (`grok inspect`, Ctrl+Shift+A catalog). They carry the full Surgical Team protocols in their body text.
 - For plugin installs, users may need to ensure `.grok/agents/` from the plugin is linked or copied.
 - `todo_write` is the single source of truth for task state across the whole team.
