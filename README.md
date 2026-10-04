@@ -331,8 +331,8 @@ Pi also reads this repo's `AGENTS.md` as a context file. Context files load whet
 Pi core has **no subagent tool**. Built-in `codemode` runs tool calls in parallel inside one conversation; it does not spawn agents. Named subagents come only from the official `examples/extensions/subagent/` example extension. It ships inside the `@earendil-works/pi-coding-agent` package, but nothing installs it for you. Find your copy of the package instead of cloning the monorepo:
 
 ```bash
-# mise:
-ls "$(mise where pi)/pi/examples/extensions/subagent"
+# mise (use the `latest` alias; `mise where pi` is version-pinned):
+ls "$(dirname "$(mise where pi)")/latest/pi/examples/extensions/subagent"
 
 # npm install -g:
 readlink -f "$(command -v pi)"   # → .../@earendil-works/pi-coding-agent/dist/bundle/cli.js
@@ -359,6 +359,7 @@ done
 ```
 
 Things to know:
+- **Don't link into a version-numbered directory.** mise deletes the old version's directory on upgrade, leaving dangling symlinks that Pi skips silently — `subagent` just disappears. If it vanishes after an upgrade, check with `ls -L ~/.pi/agent/extensions/subagent/` and re-link.
 - **Don't use `pi install` on the extension directory.** That registers the sibling `prompts/` folder but never the `subagent` tool itself, and reports no error.
 - **Subagents don't inherit `--approve` or `--skill`.** Unless the project's trust is saved (`/trust`) or `defaultProjectTrust` is `"always"`, they load only the global `~/.agents/skills/` and their agent file's prompt. Use the global skills symlink above, or put everything a role needs in its `task`.
 - **Be wary of unofficial npm "pi-subagent" packages.** None of them are this extension, and extensions run with full OS permissions.
