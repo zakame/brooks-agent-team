@@ -11,10 +11,11 @@ If you were spawned by the `subagent` tool, you are already playing one of these
 
 ## Check This First: Is the `subagent` Tool Even Available?
 
-pi-coding-agent core ships no subagent/delegate tool and no built-in task list — this is confirmed by inspecting the full `ExtensionAPI` surface in `packages/coding-agent/src/core/extensions/types.ts`, which has no conversation-spawning primitive at all. The **only** way to get real parallel teammates on Pi is the official `examples/extensions/subagent/` extension, which is opt-in example code, not a first-party feature, and pre-1.0 (breaking changes have landed release-to-release, verified against v0.87.1).
+pi-coding-agent core ships no subagent/delegate tool and no built-in task list — this is confirmed by inspecting the full `ExtensionAPI` surface in `packages/coding-agent/src/core/extensions/types.ts`, which has no conversation-spawning primitive at all. The **only** way to get real parallel teammates on Pi is the official `examples/extensions/subagent/` extension — opt-in example code, not a first-party feature (verified against v1.0.2). Built-in `codemode` parallelizes tool calls within one conversation, not agents.
 
 Check your tool list for a `subagent` tool before doing anything else in this skill:
-- **Present** → continue below.
+- **Present, accepts `agent`/`tasks`/`chain`/`agentScope`** → continue below.
+- **Present, accepts only `task`** → that's the unshipped experimental durable harness (run from a source clone), which can't load `.pi/agents/`. Use `assemble-team` instead.
 - **Absent** → stop here and use the `assemble-team` skill instead for single-session work. Pi's AGENTS.md/`CLAUDE.md` context-file support works with zero setup. Agent Skills discovery needs no new adapter files either — a project-local `.agents/skills/` is gated by the same one-time project-trust decision as `.pi/skills/`, but symlinking this repo's `skills/` into the *global* `~/.agents/skills/` once (see [README's Pi Coding Agent section](../../README.md#pi-coding-agent)) or using `pi --skill <path>` for a one-off session both skip that trust step entirely — confirmed at the source level, not just documented behavior. Either way, `assemble-team` and every role skill are usable immediately even without the extension.
 
 ## Step 1: Quick Project Survey
@@ -36,7 +37,7 @@ Ask the user one focused question:
 >
 > Reply with "yes"/"add language lawyer", or "default" to proceed with Copilot + Tester only.
 
-Wait for the user's response before continuing. (Editor/Toolsmith/Program Clerk aren't offered here — this repo has no `.pi/agents/*.md` definition for them, so there's no `agentName` to dispatch in Step 4. They're still available inline via their own skills in the main session.)
+Wait for the user's response before continuing. (Editor/Toolsmith/Program Clerk aren't offered here — this repo has no `.pi/agents/*.md` definition for them, so there's no `agent` name to dispatch in Step 4. They're still available inline via their own skills in the main session.)
 
 ## Step 3: No Shared Task List — Use Plain Notes
 
@@ -44,22 +45,21 @@ The `subagent` extension has no task-board equivalent; each spawned subagent is 
 
 ## Step 4: Spawn the Team
 
-Call the `subagent` tool with `mode: "parallel"` and one `tasks[]` entry per role (max 8 tasks / 4 concurrent — hardcoded in the extension, not configurable). For each task:
+Call the `subagent` tool with one `tasks[]` entry per role — passing `tasks` selects parallel mode; there is no `mode` field. Max 8 tasks / 4 concurrent, hardcoded. For each task:
 
-- `agentName`: `"copilot"`, `"tester"`, or `"language-lawyer"` — these resolve to `.pi/agents/*.md` in this repo, **only if the call also sets `agentScope: "project"` or `"both"`** (default is `"user"`-scope only, which silently ignores `.pi/agents/`). If the user has instead symlinked these role files into the global `~/.pi/agent/agents/` (see the [README's Pi Coding Agent section](../../README.md#pi-coding-agent)), omit `agentScope` entirely — `"user"` is the default and resolves from there in any project.
+- `agent`: `"copilot"`, `"tester"`, or `"language-lawyer"` — these resolve to `.pi/agents/*.md` in this repo, **only if the call also sets `agentScope: "project"` or `"both"`** (default is `"user"`-scope only, which silently ignores `.pi/agents/`). If the user has instead symlinked these role files into the global `~/.pi/agent/agents/` (see the [README's Pi Coding Agent section](../../README.md#pi-coding-agent)), omit `agentScope` entirely — `"user"` is the default and resolves from there in any project.
 - `task`: the role's full assignment in one shot — project summary, the concrete diff/spec/question, file ownership (below). There is no lightweight-first-turn/resume split; each subagent is a fresh process that only knows what's in this string.
 
 ```json
 {
-  "mode": "parallel",
   "agentScope": "project",
   "tasks": [
     {
-      "agentName": "copilot",
+      "agent": "copilot",
       "task": "You are the Copilot on the surgical team for [PROJECT]. [project summary]. Review [WHAT_WAS_IMPLEMENTED] against [SPEC_OR_PLAN]. Diff/files: [paste — this role has no bash, so it cannot run git itself]. Report in the Blocking/Important/Suggestions format from your role contract."
     },
     {
-      "agentName": "tester",
+      "agent": "tester",
       "task": "You are the Tester on the surgical team for [PROJECT]. [project summary]. Enumerate failure modes for [WHAT_IS_BEING_TESTED] per your role contract, then write the tests. Do not touch production code."
     }
   ]
@@ -69,6 +69,8 @@ Call the `subagent` tool with `mode: "parallel"` and one `tasks[]` entry per rol
 Add a third `language-lawyer` task if selected in Step 2, with `[THE_EXACT_QUESTION]`, `[RUNTIME_CONTEXT]`, and note it has no dedicated web-fetch/web-search tool (see `.pi/agents/language-lawyer.md`) — it can only verify via `bash` and whatever's reachable that way.
 
 Since each task runs in an **isolated OS process with its own working directory context** (not a shared in-process session), there is no live conflict detection between concurrent writers the way a shared editor session would have. Only Tester writes files here — never run two write-capable tasks with overlapping file ownership in the same parallel batch.
+
+Subagents are spawned as `pi -p` without `--approve`, so in an untrusted project they don't load the repo's `.agents/skills/` — only their agent-file prompt. Put everything a role needs in its `task` string, or install the skills globally (`~/.agents/skills/`).
 
 ### File Ownership (Include in Every Task String)
 
@@ -80,7 +82,7 @@ Since each task runs in an **isolated OS process with its own working directory 
 
 The `subagent` tool streams each task's progress and returns when all complete (or per-task, depending on how your Pi session surfaces it) — there's no background-and-poll model to manage here, unlike Claude Agent Teams or Hermes' kanban dispatcher. Tell the user:
 
-> Team spawned via Pi's `subagent` extension (parallel mode, `agentScope: "project"`).
+> Team spawned via Pi's `subagent` extension (`tasks[]`, `agentScope: "project"`).
 >
 > - **Copilot** and **Language Lawyer** (if added) are read-only — their findings come back as their task's output, nothing to apply.
 > - **Tester** writes directly to this working tree (no worktree isolation — the extension spawns separate OS processes, not separate checkouts). Review its changes with `git diff` before continuing.
