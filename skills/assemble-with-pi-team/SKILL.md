@@ -16,7 +16,7 @@ pi-coding-agent core ships no subagent/delegate tool and no built-in task list �
 Check your tool list for a `subagent` tool before doing anything else in this skill:
 - **Present, accepts `agent`/`tasks`/`chain`/`agentScope`** → continue below.
 - **Present, accepts only `task`** → that's the unshipped experimental durable harness (run from a source clone), which can't load `.pi/agents/`. Use `assemble-team` instead.
-- **Absent** → stop here and use the `assemble-team` skill instead for single-session work. Pi's AGENTS.md/`CLAUDE.md` context-file support works with zero setup. Agent Skills discovery needs no new adapter files either — a project-local `.agents/skills/` is gated by the same one-time project-trust decision as `.pi/skills/`, but symlinking this repo's `skills/` into the *global* `~/.agents/skills/` once (see [README's Pi Coding Agent section](../../README.md#pi-coding-agent)) or using `pi --skill <path>` for a one-off session both skip that trust step entirely — confirmed at the source level, not just documented behavior. Either way, `assemble-team` and every role skill are usable immediately even without the extension.
+- **Absent** → use `assemble-team` for single-session work. See the [README's Pi Coding Agent section](../../README.md#pi-coding-agent) for skill setup.
 
 ## Step 1: Quick Project Survey
 
@@ -70,7 +70,7 @@ Add a third `language-lawyer` task if selected in Step 2, with `[THE_EXACT_QUEST
 
 Since each task runs in an **isolated OS process with its own working directory context** (not a shared in-process session), there is no live conflict detection between concurrent writers the way a shared editor session would have. Only Tester writes files here — never run two write-capable tasks with overlapping file ownership in the same parallel batch.
 
-Subagents are spawned as `pi -p` without `--approve`, so in an untrusted project they don't load the repo's `.agents/skills/` — only their agent-file prompt. Put everything a role needs in its `task` string, or install the skills globally (`~/.agents/skills/`).
+Subagents don't inherit `--approve` or `--skill`. Unless the project's trust is saved (`/trust`) or `defaultProjectTrust` is `"always"`, they load only the global `~/.agents/skills/` — not the repo's `.agents/skills/` — plus their agent-file prompt. Put everything a role needs in its `task` string, or install the skills globally.
 
 ### File Ownership (Include in Every Task String)
 
