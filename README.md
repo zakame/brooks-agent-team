@@ -309,6 +309,7 @@ Pi discovers skills from the global `~/.agents/skills/` and from project-local `
 
 ```bash
 git clone https://github.com/zakame/brooks-agent-team /path/to/brooks-agent-team
+mkdir -p ~/.agents/skills
 ln -sf /path/to/brooks-agent-team/skills ~/.agents/skills/brooks-agent-team
 ```
 
@@ -359,7 +360,7 @@ done
 
 Things to know:
 - **Don't use `pi install` on the extension directory.** That registers the sibling `prompts/` folder but never the `subagent` tool itself, and reports no error.
-- **Subagents run without `--approve`.** In an untrusted project they don't load this repo's `.agents/skills/`; they get only their agent file's prompt. Use the global skills symlink above, or put everything a role needs in its `task`.
+- **Subagents don't inherit `--approve` or `--skill`.** Unless the project's trust is saved (`/trust`) or `defaultProjectTrust` is `"always"`, they load only the global `~/.agents/skills/` and their agent file's prompt. Use the global skills symlink above, or put everything a role needs in its `task`.
 - **Be wary of unofficial npm "pi-subagent" packages.** None of them are this extension, and extensions run with full OS permissions.
 - **Ignore the `subagent` tool in a source checkout's `src/experimental/durable/`.** It's a different, unshipped tool that takes only `task` and can't load `.pi/agents/`.
 
@@ -721,7 +722,7 @@ If Hermes Agent updates its skills/delegation/kanban tooling, check its [documen
 
 **No built-in subagent tool or task list.** Core has neither. `codemode` (added in 0.99.0) runs tool calls in parallel inside one conversation; it is not agent dispatch.
 
-**The `subagent` example extension** is the only multi-agent path. It is opt-in and unchanged from v0.87.1 to v1.0.2, and it runs one OS process per task (`pi --mode json -p --no-session`). The mode depends on which parameter you pass: `agent`+`task` runs one task, `tasks[]` runs up to 8 tasks with 4 at a time (hardcoded), and `chain[]` runs tasks in sequence with `{previous}` handoff. There is no `mode` field. Agent files live in `~/.pi/agent/agents/*.md` (user scope, the default) or in `.pi/agents/*.md` when the call passes `agentScope: "project"`/`"both"`. The `name`/`description` frontmatter is required; `tools`/`model` are optional. The file body is passed via `--append-system-prompt`, and no call parameter can replace it. Child processes don't get `--approve`, so in an untrusted project they skip project-local skills. There is no shared task list.
+**The `subagent` example extension** is the only multi-agent path. It is opt-in and unchanged from v0.87.1 to v1.0.2, and it runs one OS process per task (`pi --mode json -p --no-session`). The mode depends on which parameter you pass: `agent`+`task` runs one task, `tasks[]` runs up to 8 tasks with 4 at a time (hardcoded), and `chain[]` runs tasks in sequence with `{previous}` handoff. There is no `mode` field. Agent files live in `~/.pi/agent/agents/*.md` (user scope, the default) or in `.pi/agents/*.md` when the call passes `agentScope: "project"`/`"both"`. The `name`/`description` frontmatter is required; `tools`/`model` are optional. The file body is passed via `--append-system-prompt`, and no call parameter can replace it. Children don't inherit `--approve` or `--skill`, so unless the project's trust is saved (`/trust`) or `defaultProjectTrust` is `"always"`, they load only global `~/.agents/skills/`. There is no shared task list.
 
 **No enforced sandbox.** `docs/security.md` says safety comes from OS-level isolation. `tools:` in an agent file is a real allow-list, so Copilot's and Language Lawyer's agent files leave out `edit`/`write`. In an untrusted project the extension asks before running project-local agents. The prompt is skipped without a UI or with `confirmProjectAgents: false`. This check lives in the extension; it is not a core trust gate.
 
