@@ -10,10 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - **Pi `subagent` call examples used parameters that don't exist**: the extension takes `agent`/`task`, `tasks[]`, or `chain[]` and picks the mode from which one is passed. It has no `agentName` or `mode` field. This was wrong from the start, not a v1.0 change.
+- **`.pi/agents/tester.md` note listed the wrong default tools**: when `tools:` is omitted, the Tester inherits Pi's default set: `read`, `bash`, `edit`, `write`, or the user's `defaultTools`. That set doesn't include `grep`/`find`/`ls`, and it hasn't changed since v0.87.1.
 
 ### Changed
 
-- **Pi Coding Agent docs re-verified against v1.0.2**: removed "pre-1.0" and noted that core still has no subagent tool (the new `codemode` runs tool calls in parallel, not agents). The `subagent` example extension is unchanged since v0.87.1. Added `.pi/mcp.json` and `--approve` to the trust guidance. Documented that subagent child processes run without `--approve`, so they skip project-local skills in untrusted projects. Limited the extension path snippet to npm/mise installs and added a warning about the unshipped experimental durable-harness `subagent` tool. Cut down the README and AGENTS.md Pi prose.
+- **Pi Coding Agent docs re-verified against v1.0.2**: removed "pre-1.0" and noted that core still has no subagent tool (the new `codemode` runs tool calls in parallel, not agents). The `subagent` example extension is unchanged since v0.87.1. Added `.pi/mcp.json` and `--approve` to the trust guidance. Documented that subagent child processes don't inherit `--approve` or `--skill`, so unless project trust is saved (`/trust`) or `defaultProjectTrust` is `"always"`, they load only global `~/.agents/skills/`. Added a missing `mkdir -p ~/.agents/skills` to the global symlink step. Limited the extension path snippet to npm/mise installs and added a warning about the unshipped experimental durable-harness `subagent` tool. Cut down the README and AGENTS.md Pi prose.
 
 ## [1.3.0] - 2026-09-29
 
