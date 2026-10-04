@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Pi `subagent` call examples used parameters that don't exist**: the extension takes `agent`/`task`, `tasks[]`, or `chain[]` and picks the mode from which one is passed. It has no `agentName` or `mode` field. This was wrong from the start, not a v1.0 change.
+
+### Changed
+
+- **Pi Coding Agent docs re-verified against v1.0.2**: removed "pre-1.0" and noted that core still has no subagent tool (the new `codemode` runs tool calls in parallel, not agents). The `subagent` example extension is unchanged since v0.87.1. Added `.pi/mcp.json` and `--approve` to the trust guidance. Documented that subagent child processes run without `--approve`, so they skip project-local skills in untrusted projects. Limited the extension path snippet to npm/mise installs and added a warning about the unshipped experimental durable-harness `subagent` tool. Cut down the README and AGENTS.md Pi prose.
+
 ## [1.3.0] - 2026-09-29
 
 ### Added

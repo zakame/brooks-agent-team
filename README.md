@@ -22,7 +22,7 @@ This project draws from two sources:
 
 **[Superpowers by Jesse Vincent](https://github.com/obra/superpowers)**: a Claude Code skills framework that demonstrated how composable, role-aware skills can guide an AI agent through disciplined software development workflows. The structure, conventions, and plugin format of this project follow Superpowers' design closely.
 
-The `SKILL.md` format used here conforms to the [Agent Skills open standard](https://github.com/agentskills/agentskills), which is supported by GitHub Copilot CLI, Claude Code, OpenCode, OpenAI Codex (via the `.agents/skills/` mirror described below), [Hermes Agent](https://github.com/NousResearch/hermes-agent) (native, once the project-local skill directory is trusted — see the [Hermes Agent section](#hermes-agent) below), and [Pi Coding Agent](https://github.com/earendil-works/pi/tree/main/packages/coding-agent) (native, once the project-local skill directory is trusted, same as Hermes Agent — see the [Pi Coding Agent section](#pi-coding-agent) below).
+The `SKILL.md` format used here conforms to the [Agent Skills open standard](https://github.com/agentskills/agentskills), which is supported by GitHub Copilot CLI, Claude Code, OpenCode, OpenAI Codex (via the `.agents/skills/` mirror described below), [Hermes Agent](https://github.com/NousResearch/hermes-agent) (native, once the project-local skill directory is trusted — see the [Hermes Agent section](#hermes-agent) below), and [Pi Coding Agent](https://github.com/earendil-works/pi/tree/main/packages/coding-agent) (native; global `~/.agents/skills/` needs no trust step — see the [Pi Coding Agent section](#pi-coding-agent) below).
 
 ## The Team
 
@@ -301,75 +301,69 @@ Hermes ships a kanban tool (`kanban_create`/`kanban_list`/`kanban_link`/`kanban_
 
 ### Pi Coding Agent
 
-[Pi Coding Agent](https://github.com/earendil-works/pi/tree/main/packages/coding-agent) (pre-1.0; this integration was verified against v0.87.1, 2026-09) natively supports the Agent Skills standard, so **no new adapter files are needed for skills** — but see the trust step below.
+[Pi Coding Agent](https://github.com/earendil-works/pi/tree/main/packages/coding-agent) (verified against v1.0.2, 2026-10) supports the Agent Skills standard natively, so skills need **no adapter files**.
 
 #### Skills
 
-Pi discovers Agent Skills from `.agents/skills/`, both a global `~/.agents/skills/` and a project-local `.agents/skills/` walked from the working directory up to the repository root. **Recommended: symlink once, globally, and skip project trust entirely.** `~/.agents/skills/` is scanned unconditionally in every project — confirmed at the source level (`package-manager.ts`'s resource-assembly order adds it completely outside the trust-gated branch, not merely exempted from the trust check) — so a one-time setup makes every skill in this repo available everywhere, permanently, with no trust prompt:
+Pi discovers skills from the global `~/.agents/skills/` and from project-local `.agents/skills/` directories (cwd up to the repo root). **Recommended:** symlink once into the global directory. It is never trust-gated, so the skills work in every project without a prompt:
 
 ```bash
 git clone https://github.com/zakame/brooks-agent-team /path/to/brooks-agent-team
 ln -sf /path/to/brooks-agent-team/skills ~/.agents/skills/brooks-agent-team
 ```
 
-Symlinks are fully resolved by Pi's scanner (confirmed in `skills.ts`), so this is equivalent to a real copy; only requirement is that no path segment from `~/.agents/skills/` down to a `SKILL.md` starts with `.` or is `node_modules`. Skills are then usable immediately, from any project:
+Then:
 
 ```
 Use the assemble-team skill
-Use the surgeon skill to implement this feature.
 Use the copilot skill to review my changes.
 ```
 
-If a target project happens to define its own trusted skill of the same name, that project's own skill wins the collision — your global one only ever loses to that, never to another global/user source.
+Alternatives:
+- `pi --skill /path/to/brooks-agent-team/skills` loads the skills for one session and skips project trust.
+- A project-local `.agents/skills/` is trust-gated, just like `.pi/settings.json`, `.pi/mcp.json`, and `.pi/skills/` (Pi's `docs/security.md`). Trust the project once, or pass `pi --approve` to trust it for one process.
 
-**Alternative for a one-off session:** `pi --skill /path/to/brooks-agent-team/skills` (repeatable per path) also bypasses project trust — it's loaded as a temporary, explicitly-supplied CLI resource (confirmed in `resource-loader.ts`: CLI-supplied paths never go through `isProjectTrusted()`), so it works without touching `~/.agents/skills/` at all.
-
-**Alternative if you'd rather keep it project-local:** a project-local `.agents/skills/` directory (e.g. copying or symlinking this repo's `skills/` into the project you're working on, or working from inside a clone of this repo directly) is gated by the same one-time project-trust decision as Pi's own `.pi/skills/` — confirmed in `hasTrustRequiringProjectResources()` (`packages/coding-agent/src/core/trust-manager.ts`). Trust the project once (however your Pi session prompts for it, or by pre-approving it) and it behaves the same as the global setup above.
-
-This repository's `AGENTS.md` is also read directly by Pi's own context-file mechanism (`AGENTS.md`/`CLAUDE.md`, agent-dir + cwd + parent directories) — a separate mechanism from skills, not trust-gated, and no adapter needed there either.
+Pi also reads this repo's `AGENTS.md` as a context file. Context files load whether or not the project is trusted.
 
 #### Subagent dispatch (optional, extension-gated)
 
-pi-coding-agent's core has **no built-in subagent tool and no per-role agent-definition format** — confirmed by inspecting its full extension API, which has no conversation-spawning primitive. The only way to get named, dispatchable subagents is the official `examples/extensions/subagent/` extension, which is opt-in example code, not installed by default. Its own README installs it from a clone of the `earendil-works/pi` monorepo, but that's usually unnecessary: `examples/` ships inside the same `@earendil-works/pi-coding-agent` package you already installed (a sibling of `dist/`, confirmed across recent published versions), regardless of install method (plain `npm install -g`, the `pi.dev` curl installer's two install modes, or a version manager). Locate your existing install instead of cloning:
+Pi core has **no subagent tool**. Built-in `codemode` runs tool calls in parallel inside one conversation; it does not spawn agents. Named subagents come only from the official `examples/extensions/subagent/` example extension. It ships inside the `@earendil-works/pi-coding-agent` package, but nothing installs it for you. Find your copy of the package instead of cloning the monorepo:
 
 ```bash
 # mise:
 ls "$(mise where pi)/pi/examples/extensions/subagent"
 
-# plain npm / curl-installed:
+# npm install -g:
 readlink -f "$(command -v pi)"   # → .../@earendil-works/pi-coding-agent/dist/bundle/cli.js
-# examples/extensions/subagent/ sits two directories up from there (next to dist/)
+# examples/extensions/subagent/ is two directories up, next to dist/
 ```
 
-That directory has its own `README.md` (also readable on GitHub: [`examples/extensions/subagent/README.md`](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/extensions/subagent/README.md)) with the full install/symlink commands and usage examples — point them at whichever local path you resolved above instead of a fresh clone. Fall back to actually cloning `earendil-works/pi` only if you can't locate an existing install this way. (Other shim-based version managers besides mise aren't verified here — check `ls` on whatever path they report before trusting it.)
+These paths are verified only for npm and mise installs. The `pi.dev` curl installer, Nix, and other package managers aren't verified, so check the path with `ls` first. If you can't find a local copy, clone `earendil-works/pi`.
 
-**To use this repo's own roles instead of the extension's bundled samples, you only need one of its three symlink groups.** The extension README's "Installation" section symlinks three separate things into three separate places: the extension itself (`index.ts`/`agents.ts` → `~/.pi/agent/extensions/subagent/`, note the `extensions/` segment — this is the only one that's required), its sample agents (`scout.md`/`planner.md`/`reviewer.md`/`worker.md` → flat `~/.pi/agent/agents/`), and its sample workflow prompts (→ flat `~/.pi/agent/prompts/`). Skip the latter two entirely:
+Only the extension itself needs linking. Skip the sample agents and prompts listed in its [README](https://github.com/earendil-works/pi/blob/main/packages/coding-agent/examples/extensions/subagent/README.md):
 
 ```bash
-# Only this is required — registers the subagent tool itself:
 mkdir -p ~/.pi/agent/extensions/subagent
 ln -sf <resolved-path>/examples/extensions/subagent/index.ts ~/.pi/agent/extensions/subagent/index.ts
 ln -sf <resolved-path>/examples/extensions/subagent/agents.ts ~/.pi/agent/extensions/subagent/agents.ts
 ```
 
-Confirmed at the source level: the tool's `agentName` parameter is a plain string, validated at *call time* against a fresh scan of whichever `agentScope` you pass — never a fixed enum computed from `~/.pi/agent/agents/` at load time, and that directory is never even read when every call uses `agentScope: "project"`. A missing `~/.pi/agent/agents/`/`prompts/` degrades to an empty result, not an error. Dispatch this repo's own `.pi/agents/copilot.md`/`tester.md`/`language-lawyer.md` by name with `agentScope: "project"` (or `"both"`) on every call, and the sample agents/prompts are never needed at all.
-
-**For these roles in every project, not just one that ships its own `.pi/agents/`:** symlink them into the *user*-scope directory instead — the same convenience trick as the global skills symlink above, applied to agent definitions:
+The extension finds this repo's `.pi/agents/copilot.md`, `tester.md`, and `language-lawyer.md` only when a call passes `agentScope: "project"` (or `"both"`); the default scope is `"user"`. To use the roles from every project without `agentScope`, symlink them into the user-scope directory instead (note the singular `agent`):
 
 ```bash
 mkdir -p ~/.pi/agent/agents
-ln -sf /path/to/brooks-agent-team/.pi/agents/copilot.md ~/.pi/agent/agents/copilot.md
-ln -sf /path/to/brooks-agent-team/.pi/agents/tester.md ~/.pi/agent/agents/tester.md
-ln -sf /path/to/brooks-agent-team/.pi/agents/language-lawyer.md ~/.pi/agent/agents/language-lawyer.md
+for r in copilot tester language-lawyer; do
+  ln -sf /path/to/brooks-agent-team/.pi/agents/$r.md ~/.pi/agent/agents/$r.md
+done
 ```
 
-Since `"user"` is `agentScope`'s documented default, dispatch calls don't even need an `agentScope` parameter in this case — `agentName: "copilot"` alone resolves from any project. Note the directory is `~/.pi/agent/agents/` (singular "agent," Pi's own agent-dir), not `~/.pi/agents/`. This is a separate, optional setup from the project-scope approach above — use whichever fits how you work: project-scope for a project that already vendors this repo's `.pi/agents/`, user-scope for using these roles from anywhere.
+Things to know:
+- **Don't use `pi install` on the extension directory.** That registers the sibling `prompts/` folder but never the `subagent` tool itself, and reports no error.
+- **Subagents run without `--approve`.** In an untrusted project they don't load this repo's `.agents/skills/`; they get only their agent file's prompt. Use the global skills symlink above, or put everything a role needs in its `task`.
+- **Be wary of unofficial npm "pi-subagent" packages.** None of them are this extension, and extensions run with full OS permissions.
+- **Ignore the `subagent` tool in a source checkout's `src/experimental/durable/`.** It's a different, unshipped tool that takes only `task` and can't load `.pi/agents/`.
 
-**Don't try `pi install <path>/examples/extensions/subagent` instead of symlinking — it silently half-installs.** `pi install`'s package discovery registers a source as installable the moment it finds *any* of `extensions/`/`skills/`/`prompts/`/`themes/` at the given path's root; `subagent/` has a sibling `prompts/` folder (its workflow templates) but no `extensions/` wrapper around its own `index.ts`. The result: its three prompt templates get registered as slash commands, but `index.ts`/`agents.ts` — the actual `subagent` tool — never gets registered as an extension at all, with no error. You'd end up with `/implement`/`/scout-and-plan`/`/implement-and-review` commands referencing a tool that was never loaded. Pointing `pi install` one level higher, at `examples/`, avoids that specific trap but instead pulls in dozens of unrelated demo extensions with no install-time filter available — also not viable. Manual symlinking is the only method confirmed to work correctly here.
-
-**Caution:** an npm search for "pi-subagent" turns up several unrelated, unofficial packages from individual publishers — none are the official example and none should be treated as a substitute for it; extensions run with full OS-level process permissions.
-
-If a user has the extension installed, this repo ships `.pi/agents/copilot.md`, `.pi/agents/tester.md`, and `.pi/agents/language-lawyer.md` in that extension's format (`name`/`description` required, `tools`/`model` optional) — they're inert otherwise. See [Dispatch subagent roles](#dispatch-subagent-roles) and `skills/assemble-with-pi-team/SKILL.md` for the full pattern, including how to enable project-scope discovery (`agentScope: "project"`/`"both"` on the `subagent` tool call — the default `"user"` scope skips `.pi/agents/` entirely).
+See [Dispatch subagent roles](#dispatch-subagent-roles) and `skills/assemble-with-pi-team/SKILL.md`.
 
 ## Usage
 
@@ -475,7 +469,7 @@ Use the assemble-with-grok-team skill
 Use the assemble-with-hermes-team skill
 ```
 
-**Pi Coding Agent** — uses `assemble-with-pi-team` skill, but only if the optional `subagent` example extension is installed (check your tool list for a `subagent` tool first). If present, it dispatches `.pi/agents/copilot.md`/`tester.md`/`language-lawyer.md` as genuinely separate OS processes via the extension's `parallel` mode (max 8 tasks / 4 concurrent). If absent, pi-coding-agent has no parallel-agent mechanism at all — use `assemble-team` for single-session work instead:
+**Pi Coding Agent** — uses `assemble-with-pi-team` skill, but only if the optional `subagent` example extension is installed (check your tool list for a `subagent` tool first). If present, it dispatches `.pi/agents/copilot.md`/`tester.md`/`language-lawyer.md` as one `tasks[]` batch of separate OS processes (max 8 tasks / 4 concurrent). If absent, pi-coding-agent has no parallel-agent mechanism at all — use `assemble-team` for single-session work instead:
 ```
 Use the assemble-with-pi-team skill
 ```
@@ -485,7 +479,7 @@ Use the assemble-with-pi-team skill
 - **Copilot CLI / OpenCode:** fleet/task-tool style parallel workers following the shared task list included in their prompts or platform session state.
 - **Codex:** explicit parallel specialist subagents, consolidated summaries back to the main thread, and `/agent` for inspecting, steering, and switching between agent threads. Codex does not currently provide a Claude Agent Teams-style shared task list or direct teammate mailbox.
 - **Hermes Agent:** ephemeral `delegate_task` children by default (no persistent per-role agent file exists) — the plan lives in what you tell each child, and its result is the real completion signal. For a plan that outlives the session, the kanban dispatcher tracks it on Hermes' own board instead — durable SQLite storage, dependency-aware states, and a review state — via the profile's `kanban` toolset when enabled, or the `hermes kanban` CLI when it isn't. The worker-lifecycle tools that close a card out autonomously (`kanban_complete`, `kanban_comment`, `kanban_block`, etc.) go to any task the dispatcher itself launches, a shared `default` profile included — a dedicated profile per role just gives it a persistent identity, not the lifecycle tools themselves.
-- **Pi Coding Agent:** no built-in parallelism and no shared task list at all — core has neither a subagent tool nor a task-tracking primitive. Real parallel teammates require a user-installed, pre-1.0, example-code extension (`subagent`), which spawns separate OS processes per task (single/parallel/chain modes) with no shared state beyond what you put in each task's prompt. Without that extension, this platform gets single-session `assemble-team` only, same experience as Codex/OpenCode without their respective multi-agent features.
+- **Pi Coding Agent:** no built-in parallelism and no shared task list at all — core has neither a subagent tool nor a task-tracking primitive. Real parallel teammates require the user-installed `subagent` example extension, which spawns separate OS processes per task (single, `tasks[]`, or `chain[]`) with no shared state beyond what you put in each task's prompt. Without that extension, this platform gets single-session `assemble-team` only, same experience as Codex/OpenCode without their respective multi-agent features.
 
 ### Invoke skills directly
 
@@ -529,7 +523,7 @@ Use the copilot skill to review my changes.
 Use the language-lawyer skill for this edge case.
 ```
 
-**Pi Coding Agent** — use the skill name directly in your prompt (once the project is trusted, see [Pi Coding Agent](#pi-coding-agent) above):
+**Pi Coding Agent** — use the skill name directly in your prompt (after the global symlink or project trust; see [Pi Coding Agent](#pi-coding-agent) above):
 ```
 Use the surgeon skill to start implementing this feature.
 Use the copilot skill to review my changes.
@@ -579,9 +573,9 @@ delegate_task(goal: "Review this diff against its design intent.", context: "<sk
 ```
 (Omit `role` unless your Hermes version's live tool schema actually lists it — `goal`/`context`/`output_schema` are the parameters field-verified to work.) `assemble-with-hermes-team` does this for every selected role, defaulting to this ephemeral mode or the kanban dispatcher as the work needs; see that skill for the full pattern.
 
-**Pi Coding Agent** — no dispatch tool exists in core at all; `.pi/agents/copilot.md`, `tester.md`, and `language-lawyer.md` only work if the optional `subagent` example extension is installed, and only when the tool call requests project scope:
+**Pi Coding Agent** — no dispatch tool exists in core at all; `.pi/agents/copilot.md`, `tester.md`, and `language-lawyer.md` only work if the optional `subagent` example extension is installed, and only when the call requests project scope (or the files are symlinked into `~/.pi/agent/agents/`):
 ```
-subagent(mode: "single", agentScope: "project", agentName: "copilot", task: "Review this diff against its design intent. <diff/files>")
+subagent(agentScope: "project", agent: "copilot", task: "Review this diff against its design intent. <diff/files>")
 ```
 Without that extension, there is no way to dispatch these roles as subagents on Pi at all — invoke the skill inline in the main session instead. See `skills/assemble-with-pi-team/SKILL.md` for the parallel-mode pattern.
 
@@ -723,15 +717,15 @@ If Hermes Agent updates its skills/delegation/kanban tooling, check its [documen
 
 ### Pi Coding Agent compatibility
 
-[Pi Coding Agent](https://github.com/earendil-works/pi/tree/main/packages/coding-agent) (pre-1.0; verified against `@earendil-works/pi-coding-agent` v0.87.1, 2026-09) natively supports the [Agent Skills open standard](https://github.com/agentskills/agentskills). It discovers skills from `~/.pi/agent/skills/`, its own project-local `.pi/skills/` (trust-gated), and — the path this repo relies on — the portable `~/.agents/skills/` (global, always trusted) and `.agents/skills/` (project-local, walked from the working directory up to the repository root). **Project-local `.agents/skills/` is trust-gated exactly like `.pi/skills/`**, not exempt: `hasTrustRequiringProjectResources()` (`packages/coding-agent/src/core/trust-manager.ts`) explicitly flags a project-local `.agents/skills/` directory found anywhere from cwd up to an ancestor, triggering Pi's normal trust resolution (interactive confirm / saved `trust.json` decision / `defaultProjectTrust`) — only the path exactly equal to the global `~/.agents/skills/` is excluded from that walk-up check. Two ways around that trust step entirely: symlink this repo's `skills/` into the *global* `~/.agents/skills/` once (unconditionally scanned, confirmed structurally outside the trust-gated branch in `package-manager.ts`'s resource-assembly order — see the [Pi Coding Agent installation section](#pi-coding-agent) above for the exact command), or use the `--skill <path>` CLI flag (`docs/cli.md`) for a one-off session, which loads as a temporary CLI-supplied resource that never calls `isProjectTrusted()` (`resource-loader.ts`). Pi separately reads `AGENTS.md`/`CLAUDE.md` as "context files" from its agent directory, the working directory, and parent directories (closest wins; `AGENTS.override.md` replaces only a same-directory file, not an ancestor's) — a distinct, non-trust-gated mechanism; no documented size cap exists, unlike Codex's 32 KiB limit.
+[Pi Coding Agent](https://github.com/earendil-works/pi/tree/main/packages/coding-agent) (`@earendil-works/pi-coding-agent`, verified against v1.0.2, 2026-10) supports the [Agent Skills open standard](https://github.com/agentskills/agentskills). It reads skills from `~/.agents/skills/` (global, never trust-gated) and from project-local `.agents/skills/` (cwd up to the repo root). Project-local skills are trust-gated, along with `.pi/settings.json`, `.pi/mcp.json`, `.pi/extensions`, `.pi/skills`, `.pi/prompts`, `.pi/themes`, and `.pi/SYSTEM.md`/`APPEND_SYSTEM.md` (`docs/security.md`). You can skip the trust prompt three ways: the global symlink, `--skill <path>`, or `--approve` for one process. Context files (`AGENTS.override.md`, `AGENTS.md`, `CLAUDE.md`, from the agent dir, cwd, and parent directories) load regardless of trust and have no documented size cap.
 
-**No built-in subagent tool or task list.** Direct inspection of the full `ExtensionAPI` surface (`packages/coding-agent/src/core/extensions/types.ts`) turned up no conversation-spawning primitive — no `delegate_task`, no `spawnChild`, nothing. A more sophisticated in-process multi-conversation design ("pico3") exists in `pi-agent-core`'s test harness, but its own docs state plainly it is "not existing package exports," and Pi's production agent loop (`src/core/agent-session.ts`) doesn't import it. Bare pi-coding-agent is a genuinely single-agent-loop architecture: one session, one active branch, sequential turns.
+**No built-in subagent tool or task list.** Core has neither. `codemode` (added in 0.99.0) runs tool calls in parallel inside one conversation; it is not agent dispatch.
 
-**The `subagent` example extension.** The one way to get real parallel teammates is `examples/extensions/subagent/`, official but opt-in example code, not installed by default. It spawns separate **OS processes** per task (`pi --mode json -p --no-session ...`), in three modes — single, parallel (up to 8 tasks / 4 concurrent, hardcoded, not configurable), and chain (sequential with output handoff) — each with a fully isolated context window, streamed progress, and usage/cost tracking. It also defines the closest thing to a per-role agent-definition format: Markdown files with `name`/`description` (required) plus optional `tools`/`model` frontmatter, at `~/.pi/agent/agents/*.md` (user-scope, always scanned) and `.pi/agents/*.md` (project-scope, scanned only when the `subagent` tool call sets `agentScope: "project"` or `"both"` — default is `"user"` only). This repo ships `.pi/agents/copilot.md`, `tester.md`, and `language-lawyer.md` in that format; they're inert unless a user has the extension installed and requests project scope. This is the *only* mechanism available — the tool's full parameter schema (`SubagentParams`/`TaskItem`/`ChainItem`) has no inline system-prompt/instructions field, and `agent.systemPrompt` (sourced solely from the matched file's Markdown body) is passed verbatim via `--append-system-prompt`; a call either names a discovered agent or fails outright with "Unknown agent," no per-call override exists. There is no shared task-list primitive either — the extension's own `todo.ts` example is likewise just example code, not a core feature. See `skills/assemble-with-pi-team/SKILL.md` for the full workflow and its fallback to single-session `assemble-team` when the extension isn't present.
+**The `subagent` example extension** is the only multi-agent path. It is opt-in and unchanged from v0.87.1 to v1.0.2, and it runs one OS process per task (`pi --mode json -p --no-session`). The mode depends on which parameter you pass: `agent`+`task` runs one task, `tasks[]` runs up to 8 tasks with 4 at a time (hardcoded), and `chain[]` runs tasks in sequence with `{previous}` handoff. There is no `mode` field. Agent files live in `~/.pi/agent/agents/*.md` (user scope, the default) or in `.pi/agents/*.md` when the call passes `agentScope: "project"`/`"both"`. The `name`/`description` frontmatter is required; `tools`/`model` are optional. The file body is passed via `--append-system-prompt`, and no call parameter can replace it. Child processes don't get `--approve`, so in an untrusted project they skip project-local skills. There is no shared task list.
 
-**No enforced sandbox.** `docs/security.md` states plainly that safety comes from OS-level isolation (dedicated user, container, VM), not an in-app permission boundary — there is no Codex-style `sandbox_mode = "read-only"`. `tools:` in an agent file is a real allow-list (the session gets exactly the tools named), so Copilot's and Language Lawyer's `.pi/agents/*.md` omitting `edit`/`write` is a genuine restriction, not just a prompt convention — but project-local `.pi/agents/` itself only gets a soft, extension-implemented confirm prompt in untrusted projects (skipped in non-interactive modes, or when the caller passes `confirmProjectAgents: false`), not one of Pi's core `.pi/`-resource trust gates.
+**No enforced sandbox.** `docs/security.md` says safety comes from OS-level isolation. `tools:` in an agent file is a real allow-list, so Copilot's and Language Lawyer's agent files leave out `edit`/`write`. In an untrusted project the extension asks before running project-local agents. The prompt is skipped without a UI or with `confirmProjectAgents: false`. This check lives in the extension; it is not a core trust gate.
 
-Pi Coding Agent is pre-1.0 and has shipped breaking changes in consecutive recent releases (per its own CHANGELOG) — if it updates its extension API, subagent example, or context-file conventions, re-verify against its [repository](https://github.com/earendil-works/pi/tree/main/packages/coding-agent) before trusting these claims.
+Pi has broken its extension API between releases before. Re-check these claims against its [repository](https://github.com/earendil-works/pi/tree/main/packages/coding-agent) after upgrading.
 
 ## Philosophy
 
