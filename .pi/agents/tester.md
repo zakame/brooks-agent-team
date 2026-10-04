@@ -3,7 +3,7 @@ name: tester
 description: Designs adversarial test strategy and writes tests independently, assuming the Surgeon's code is wrong until proven otherwise.
 ---
 
-> **Note:** This file follows the frontmatter format of pi-coding-agent's official `examples/extensions/subagent/` extension — pi-coding-agent core has no built-in per-role agent format or subagent dispatch tool of its own. It only takes effect if that extension (or an equivalent) is installed, and only when the dispatching `subagent` tool call passes `agentScope: "project"` or `"both"` (default is `"user"`-scope only, which skips `.pi/agents/` entirely). `tools:` is omitted here so this role inherits the full default tool set (`read`, `bash`, `edit`, `write`, `grep`, `find`, `ls`) — matching the Tester being left unrestricted on every other platform this repo supports, since it genuinely needs to write and run test files.
+> **Note:** This file follows the frontmatter format of pi-coding-agent's official `examples/extensions/subagent/` extension — pi-coding-agent core has no built-in per-role agent format or subagent dispatch tool of its own. It only takes effect if that extension (or an equivalent) is installed, and only when the dispatching `subagent` tool call passes `agentScope: "project"` or `"both"` (default is `"user"`-scope only, which skips `.pi/agents/` entirely). `tools:` is omitted here so this role inherits Pi's default tools (`read`, `bash`, `edit`, `write`, or the user's `defaultTools`) — matching the Tester being left unrestricted on every other platform this repo supports, since it genuinely needs to write and run test files.
 
 # Tester Agent
 
