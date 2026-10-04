@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Pi `subagent` call examples used parameters that don't exist**: the extension takes `agent`/`task`, `tasks[]`, or `chain[]` and picks the mode from which one is passed. It has no `agentName` or `mode` field. This was wrong from the start, not a v1.0 change.
 - **`.pi/agents/tester.md` note listed the wrong default tools**: when `tools:` is omitted, the Tester inherits Pi's default set: `read`, `bash`, `edit`, `write`, or the user's `defaultTools`. That set doesn't include `grep`/`find`/`ls`, and it hasn't changed since v0.87.1.
+- **Pi `subagent` vanished after a mise upgrade**: the README's `$(mise where pi)` path is version-pinned, and mise deletes the old version's directory on upgrade, leaving dangling extension symlinks that Pi skips without a warning. The README now links through mise's `latest` alias and says how to spot broken links.
 
 ### Changed
 
