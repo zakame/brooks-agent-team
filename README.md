@@ -6,23 +6,78 @@ Instead of every team member working on all parts of a system, the Surgical Team
 
 ## Contents
 
-- [Inspiration](#inspiration)
+- [Quick Start](#quick-start)
 - [The Team](#the-team)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Repository Structure](#repository-structure)
+- [Inspiration](#inspiration)
 - [Philosophy](#philosophy)
 - [License](#license)
 
-## Inspiration
+## Quick Start
 
-This project draws from two sources:
+### 1. Install
 
-**Fred Brooks' Surgical Team** (Chapter 3, *The Mythical Man-Month*, 1975), originally conceived by Harlan Mills: a small, highly specialized team organized around a single chief programmer who writes all critical code, supported by a copilot, tester, toolsmith, editor, administrator, language lawyer, and program clerk — each with a distinct, non-overlapping responsibility. Brooks' case for this structure is conceptual integrity: a system designed by one mind (or a few, tightly coordinated) is more coherent than one designed by a large, egalitarian team, even if it takes longer to build. Brooks' original roster also includes two secretaries, one for the administrator and one for the editor. This plugin omits them since they existed to handle human clerical work (correspondence, filing, scheduling) that an AI agent doesn't need.
+**Claude Code:**
 
-**[Superpowers by Jesse Vincent](https://github.com/obra/superpowers)**: a Claude Code skills framework that demonstrated how composable, role-aware skills can guide an AI agent through disciplined software development workflows. The structure, conventions, and plugin format of this project follow Superpowers' design closely.
+```
+/plugin marketplace add zakame/skills-marketplace
+/plugin install brooks-agent-team@zakame-skills-marketplace
+```
 
-The `SKILL.md` format used here conforms to the [Agent Skills open standard](https://github.com/agentskills/agentskills), which is supported by GitHub Copilot CLI, Claude Code, OpenCode, OpenAI Codex (via the `.agents/skills/` mirror described below), [Hermes Agent](https://github.com/NousResearch/hermes-agent) (native, once the project-local skill directory is trusted — see the [Hermes Agent section](#hermes-agent) below), and [Pi Coding Agent](https://github.com/earendil-works/pi/tree/main/packages/coding-agent) (native; global `~/.agents/skills/` needs no trust step — see the [Pi Coding Agent section](#pi-coding-agent) below).
+Other platforms (full steps under [Installation](#installation)):
+
+- **Copilot CLI:** `copilot plugin marketplace add zakame/skills-marketplace`, then `copilot plugin install brooks-agent-team@zakame-skills-marketplace`. [Details](#github-copilot-cli)
+- **OpenCode:** symlink a clone's `skills/*` into `~/.config/opencode/skills/`. [Details](#opencode)
+- **OpenAI Codex:** symlink a clone's `skills/*` into `~/.agents/skills/` and `.codex/agents/*.toml` into `~/.codex/agents/`. [Details](#openai-codex)
+- **Grok Build:** install the Claude Code plugin above; Grok picks it up automatically. [Details](#grok-build)
+- **Hermes Agent:** add a clone's `skills/` to `skills.external_dirs` in `~/.hermes/config.yaml`. [Details](#hermes-agent)
+- **Pi Coding Agent:** symlink a clone's `skills/` to `~/.agents/skills/brooks-agent-team`. [Details](#pi-coding-agent)
+
+### 2. Start a team
+
+Spawn one teammate per role, working in parallel:
+
+| Platform | Run | Requires |
+|----------|-----|----------|
+| Claude Code | `/brooks-agent-team:assemble-with-agent-teams` | [Agent Teams enabled](#parallel-team-spawn) |
+| Copilot CLI | `Use the assemble-with-fleet skill` | Experimental fleet mode |
+| OpenCode | `Use the assemble-with-fleet skill` | |
+| OpenAI Codex | `Spawn a copilot agent to review the current diff and a tester agent to audit test gaps.` | `.codex/agents/` installed |
+| Grok Build | `Use the assemble-with-grok-team skill` | |
+| Hermes Agent | `Use the assemble-with-hermes-team skill` | |
+| Pi Coding Agent | `Use the assemble-with-pi-team skill` | [`subagent` extension](#subagent-dispatch-optional-extension-gated) |
+
+For single-session work, or where parallel spawn isn't available, run `/brooks-agent-team:assemble-team` (Claude Code) or `Use the assemble-team skill` (everywhere else). See [Usage](#usage) for details.
+
+### 3. Sample run (Claude Code)
+
+```
+> /brooks-agent-team:assemble-with-agent-teams help build a new Prometheus exporter
+  app for our k3s cluster's service metrics, following @docs/design.md.
+
+⏺ I'll spawn the core surgical team now. The default is Surgeon (you) + Copilot + Tester.
+
+  Do you want any additional teammates?
+  - Editor — for documentation-heavy work
+  - Toolsmith — if you need new scripts or automation
+  - Language Lawyer — if tricky framework/version edge cases are expected
+  - Program Clerk — if the codebase needs reorganization alongside new work
+
+  Reply with the roles to add, or say "default" to proceed with the core three.
+
+> default
+
+⏺ Spawning copilot and tester. File ownership: Copilot read-only, Tester owns
+  tests/. Shared task list:
+    #1 [implement] Scaffold the exporter and /metrics endpoint
+    #2 [review]    Review the exporter               (blocked by #1)
+    #3 [test]      Test metric collection and output (blocked by #1)
+
+⏺ Team is live. You are the Surgeon — claim [implement] tasks and your teammates
+  will handle review, testing, and support in parallel.
+```
 
 ## The Team
 
@@ -371,55 +426,27 @@ See [Dispatch subagent roles](#dispatch-subagent-roles) and `skills/assemble-wit
 
 ### Two ways to start
 
+[Quick Start](#2-start-a-team) lists the command for each platform. What each one does:
+
 | Skill / Command | Tool | When to use |
 |---------|------|-------------|
-| `assemble-team` skill | All platforms (Claude Code, Copilot CLI, OpenCode, OpenAI Codex, Grok Build & Hermes Agent) | Single-session work — one AI instance plays all roles sequentially |
+| `assemble-team` skill | All platforms (Claude Code, Copilot CLI, OpenCode, OpenAI Codex, Grok Build, Hermes Agent & Pi Coding Agent) | Single-session work — one AI instance plays all roles sequentially |
 | `/assemble-team` command | Claude Code only | Same as above, as a slash command |
-| `assemble-with-grok-team` skill | Grok Build only | Parallel work — spawns one independent subagent per role using Grok's native `spawn_subagent` + worktrees + shared `todo_write` list |
-| `assemble-with-fleet` skill | Copilot CLI & OpenCode | Parallel work — spawns one independent session per role (Copilot CLI uses `/fleet`; OpenCode uses the task tool) |
 | `/assemble-with-agent-teams` command | Claude Code only | Parallel work — spawns via Claude Code Agent Teams |
+| `assemble-with-fleet` skill | Copilot CLI & OpenCode | Parallel work — spawns one independent session per role (Copilot CLI uses `/fleet`; OpenCode uses the task tool) |
+| `assemble-with-grok-team` skill | Grok Build only | Parallel work — spawns one independent subagent per role using Grok's native `spawn_subagent` + worktrees + shared `todo_write` list |
 | `assemble-with-hermes-team` skill | Hermes Agent only | Parallel work — three modes: ephemeral `delegate_task` (default), the kanban dispatcher via the `hermes kanban` CLI (no toolset needed), or the kanban toolset directly when your profile has it enabled |
 | `assemble-with-pi-team` skill | Pi Coding Agent only | Parallel work — only if the optional `subagent` example extension is installed (OS-process dispatch); otherwise Pi has no parallel-agent mechanism at all and `assemble-team` is the only option |
 
 ### `assemble-team` — single-session briefing
 
-Run at the start of any development session to get a project-contextual briefing on which roles apply and how to invoke them.
-
-**Claude Code:**
-```
-/assemble-team
-```
-
-**Copilot CLI:**
-```
-Use the assemble-team skill
-```
-
-**OpenCode:**
-```
-Use the assemble-team skill
-```
-
-**OpenAI Codex:**
-```
-Use the assemble-team skill
-```
-
-**Hermes Agent:**
-```
-Use the assemble-team skill
-```
-
-**Pi Coding Agent:**
-```
-Use the assemble-team skill
-```
+Run at the start of any development session to get a project-contextual briefing on which roles apply and how to invoke them: `/assemble-team` in Claude Code, `Use the assemble-team skill` on every other platform.
 
 The AI surveys your project and presents a tailored overview of the team. Roles are invoked on demand as the work requires them. Lightweight and works without any additional setup.
 
 ### Parallel team spawn
 
-Spawn one independent AI session per role so that Copilot reviews, Tester writes tests, and Language Lawyer researches edge cases while you continue on the critical path.
+Spawn one independent AI session per role so that Copilot reviews, Tester writes tests, and Language Lawyer researches edge cases while you continue on the critical path. The command for each platform is in [Quick Start](#2-start-a-team); prerequisites and platform notes follow.
 
 **Claude Code** — uses `/assemble-with-agent-teams` (requires [Claude Code Agent Teams](https://code.claude.com/docs/en/agent-teams.md)):
 
@@ -435,20 +462,7 @@ to `SendMessage`-only coordination instead of the shared task list:
   }
 }
 ```
-Then run:
-```
-/assemble-with-agent-teams
-```
-
-**Copilot CLI** — uses `assemble-with-fleet` skill (requires experimental fleet mode):
-```
-Use the assemble-with-fleet skill
-```
-
-**OpenCode** — uses `assemble-with-fleet` skill (spawns subagents via the task tool):
-```
-Use the assemble-with-fleet skill
-```
+Then run `/assemble-with-agent-teams`.
 
 **OpenAI Codex** — uses Codex multi-agent mode with standalone per-role agent configs in `.codex/agents/` or `~/.codex/agents/`. Multi-agent is stable and enabled by default in current Codex CLI releases. Each of the seven specialist roles (Copilot, Tester, Editor, Toolsmith, Language Lawyer, Program Clerk, Administrator) is defined by its matching TOML file.
 ```
@@ -459,22 +473,13 @@ and a language-lawyer agent to check version-sensitive API claims. Wait for all
 three, then summarize their findings by role.
 ```
 
-**Grok Build** — uses `assemble-with-grok-team` skill (native `spawn_subagent` dispatching named `brooks-*` agents directly with their full task, worktree isolation for writers, shared `todo_write` via Ctrl+T):
-```
-Use the assemble-with-grok-team skill
-```
+**Grok Build** — uses `assemble-with-grok-team` skill (native `spawn_subagent` dispatching named `brooks-*` agents directly with their full task, worktree isolation for writers, shared `todo_write` via Ctrl+T).
 
 (Note: this skill was originally built around an observed single-turn limit on custom named agents in Grok 0.2.43, forcing a `general-purpose` + `resume_from` workaround. Live smoke testing confirmed that limitation is resolved in Grok 1.0.3, and the skill now spawns named agents directly.)
 
-**Hermes Agent** — uses `assemble-with-hermes-team` skill. Defaults to ephemeral `delegate_task` dispatch; for a plan that should outlive the session, use the kanban dispatcher — via the profile's `kanban` toolset if enabled, or the `hermes kanban` CLI directly if it isn't:
-```
-Use the assemble-with-hermes-team skill
-```
+**Hermes Agent** — uses `assemble-with-hermes-team` skill. Defaults to ephemeral `delegate_task` dispatch; for a plan that should outlive the session, use the kanban dispatcher — via the profile's `kanban` toolset if enabled, or the `hermes kanban` CLI directly if it isn't.
 
-**Pi Coding Agent** — uses `assemble-with-pi-team` skill, but only if the optional `subagent` example extension is installed (check your tool list for a `subagent` tool first). If present, it dispatches `.pi/agents/copilot.md`/`tester.md`/`language-lawyer.md` as one `tasks[]` batch of separate OS processes (max 8 tasks / 4 concurrent). If absent, pi-coding-agent has no parallel-agent mechanism at all — use `assemble-team` for single-session work instead:
-```
-Use the assemble-with-pi-team skill
-```
+**Pi Coding Agent** — uses `assemble-with-pi-team` skill, but only if the optional `subagent` example extension is installed (check your tool list for a `subagent` tool first). If present, it dispatches `.pi/agents/copilot.md`/`tester.md`/`language-lawyer.md` as one `tasks[]` batch of separate OS processes (max 8 tasks / 4 concurrent). If absent, pi-coding-agent has no parallel-agent mechanism at all — use `assemble-team` for single-session work instead.
 
 **What you get by platform:**
 - **Claude Agent Teams:** independent teammates coordinated by a lead, with a shared task list, dependency tracking, direct teammate messaging, and file ownership guidance. The shared task list requires `TaskCreate`/`TaskGet`/`TaskUpdate`/`TaskList` (the single-session `TodoWrite` checklist is gated by the same flag but isn't itself part of team coordination); those are on by default only on older models like Opus 4.7 — Sonnet 5, Opus 4.8, Fable 5, Mythos 5, and later need `CLAUDE_CODE_ENABLE_TODO_TOOLS=1` (see above), or teammates silently coordinate via messages only.
@@ -728,6 +733,16 @@ If Hermes Agent updates its skills/delegation/kanban tooling, check its [documen
 **No enforced sandbox.** `docs/security.md` says safety comes from OS-level isolation. `tools:` in an agent file is a real allow-list, so Copilot's and Language Lawyer's agent files leave out `edit`/`write`. In an untrusted project the extension asks before running project-local agents. The prompt is skipped without a UI or with `confirmProjectAgents: false`. This check lives in the extension; it is not a core trust gate.
 
 Pi has broken its extension API between releases before. Re-check these claims against its [repository](https://github.com/earendil-works/pi/tree/main/packages/coding-agent) after upgrading.
+
+## Inspiration
+
+This project draws from two sources:
+
+**Fred Brooks' Surgical Team** (Chapter 3, *The Mythical Man-Month*, 1975), originally conceived by Harlan Mills: a small, highly specialized team organized around a single chief programmer who writes all critical code, supported by a copilot, tester, toolsmith, editor, administrator, language lawyer, and program clerk — each with a distinct, non-overlapping responsibility. Brooks' case for this structure is conceptual integrity: a system designed by one mind (or a few, tightly coordinated) is more coherent than one designed by a large, egalitarian team, even if it takes longer to build. Brooks' original roster also includes two secretaries, one for the administrator and one for the editor. This plugin omits them since they existed to handle human clerical work (correspondence, filing, scheduling) that an AI agent doesn't need.
+
+**[Superpowers by Jesse Vincent](https://github.com/obra/superpowers)**: a Claude Code skills framework that demonstrated how composable, role-aware skills can guide an AI agent through disciplined software development workflows. The structure, conventions, and plugin format of this project follow Superpowers' design closely.
+
+The `SKILL.md` format used here conforms to the [Agent Skills open standard](https://github.com/agentskills/agentskills), which is supported by GitHub Copilot CLI, Claude Code, OpenCode, OpenAI Codex (via the `.agents/skills/` mirror described above), [Hermes Agent](https://github.com/NousResearch/hermes-agent) (native, once the project-local skill directory is trusted — see the [Hermes Agent section](#hermes-agent) above), and [Pi Coding Agent](https://github.com/earendil-works/pi/tree/main/packages/coding-agent) (native; global `~/.agents/skills/` needs no trust step — see the [Pi Coding Agent section](#pi-coding-agent) above).
 
 ## Philosophy
 
